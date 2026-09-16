@@ -1,22 +1,24 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  UserCheck, 
-  CalendarDays, 
-  MapPin, 
-  LogOut, 
-  ShieldAlert,
-  Vote
+import {
+  LayoutDashboard,
+  Users,
+  UserCheck,
+  CalendarDays,
+  MapPin,
+  LogOut,
+  Vote,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
   const { user, logout } = useAuth();
 
   const getRoleBadge = (role?: string) => {
@@ -45,17 +47,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'events', label: 'Agenda y Eventos', icon: CalendarDays, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'VOLUNTARIO', 'TESTIGO'] },
   ];
 
+  const handleSelect = (tab: string) => {
+    setActiveTab(tab);
+    onClose();
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-line flex flex-col h-screen sticky top-0">
+    <>
+      {/* Overlay móvil */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900/40 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={`w-64 bg-white border-r border-line flex flex-col h-screen fixed md:sticky top-0 left-0 z-50 transition-transform duration-200 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+      >
       {/* Brand Header */}
       <div className="p-5 border-b border-line flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-navy flex items-center justify-center shadow-md">
           <Vote className="w-6 h-6 text-white" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="font-heading font-bold text-lg text-navy leading-tight">REDTER</h1>
           <p className="text-xs text-gray-500 font-medium tracking-wide">Gestión Territorial</p>
         </div>
+        <button onClick={onClose} className="md:hidden text-gray-400 hover:text-gray-700">
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* User Info Card */}
@@ -89,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleSelect(item.id)}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-navy text-white shadow-md'
@@ -113,6 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           Cerrar Sesión
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };
