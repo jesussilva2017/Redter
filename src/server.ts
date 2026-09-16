@@ -30,7 +30,7 @@ app.use('/api/v1/territory', territoryRouter);
 app.get('/health', (req, res) => {
   res.json({
     status: 'online',
-    app: 'SIGE Electoral - Redter Inteligencia',
+    app: 'REDTER',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development',
@@ -52,17 +52,17 @@ app.get('*', (req, res) => {
         <html lang="es">
         <head>
           <meta charset="UTF-8">
-          <title>SIGE Electoral - Redter Inteligencia</title>
+          <title>REDTER</title>
           <style>
-            body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; display: grid; place-content: center; height: 100vh; margin: 0; }
-            .card { background: #1e293b; padding: 2.5rem; border-radius: 1rem; border: 1px solid #334155; max-width: 500px; text-align: center; }
-            h1 { color: #38bdf8; margin-top: 0; }
-            code { background: #0f172a; padding: 0.2rem 0.5rem; border-radius: 0.3rem; color: #f43f5e; }
+            body { font-family: system-ui, sans-serif; background: #F8F9FA; color: #1D3557; padding: 2rem; display: grid; place-content: center; height: 100vh; margin: 0; }
+            .card { background: #FFFFFF; padding: 2.5rem; border-radius: 1rem; border: 1px solid #E9ECEF; max-width: 500px; text-align: center; }
+            h1 { color: #1D3557; margin-top: 0; }
+            code { background: #F8F9FA; padding: 0.2rem 0.5rem; border-radius: 0.3rem; color: #1E3A8A; }
           </style>
         </head>
         <body>
           <div class="card">
-            <h1>SIGE Electoral (Redter Inteligencia)</h1>
+            <h1>REDTER</h1>
             <p>API REST Node.js activa en puerto <strong>${PORT}</strong>.</p>
             <p>El cliente Frontend está listo para compilarse con <code>npm run build</code>.</p>
           </div>

@@ -5,6 +5,7 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    background-color: #F8F9FA;
   }
 
   h1, h2, h3, h4, .font-heading {
@@ -18,19 +19,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #F8F9FA;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #D1D5DB;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-
-/* Glassmorphism utility */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #9CA3AF;
 }

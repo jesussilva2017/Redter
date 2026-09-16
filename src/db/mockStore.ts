@@ -6,6 +6,7 @@ export interface MockUser {
   nombre: string;
   email: string;
   cedula: string;
+  passwordHash: string;
   telefono: string;
   role: 'SUPER_ADMIN' | 'ADMIN_CAMPANA' | 'COORDINADOR' | 'LIDER' | 'TESTIGO' | 'VOLUNTARIO';
   parentLeaderId?: string | null;
@@ -102,6 +103,7 @@ export const initialUsers: MockUser[] = [
     nombre: 'Carlos Mendoza (Gerente Campaña)',
     email: 'admin@redter.co',
     cedula: '1018234567',
+    passwordHash: defaultPasswordHash,
     telefono: '3001234567',
     role: 'ADMIN_CAMPANA',
     activo: true,
@@ -112,6 +114,7 @@ export const initialUsers: MockUser[] = [
     nombre: 'Dra. Patricia Gómez',
     email: 'coord.bogota@redter.co',
     cedula: '52890123',
+    passwordHash: defaultPasswordHash,
     telefono: '3109876543',
     role: 'COORDINADOR',
     departamentoAsignado: 'Cundinamarca',
@@ -124,6 +127,7 @@ export const initialUsers: MockUser[] = [
     nombre: 'Andrés Felipe Restrepo',
     email: 'lider.usaquen@redter.co',
     cedula: '79876543',
+    passwordHash: defaultPasswordHash,
     telefono: '3156549870',
     role: 'LIDER',
     parentLeaderId: 'user-coord-bogota',
@@ -138,6 +142,7 @@ export const initialUsers: MockUser[] = [
     nombre: 'Valeria Ríos (Testigo Mesa 1)',
     email: 'testigo.mesa1@redter.co',
     cedula: '1020304050',
+    passwordHash: defaultPasswordHash,
     telefono: '3201112233',
     role: 'TESTIGO',
     puestoAsignadoId: 'puesto-1',
@@ -150,6 +155,7 @@ export const initialUsers: MockUser[] = [
     nombre: 'Mateo Osorio (Voluntario Jóvenes)',
     email: 'voluntario.mateo@redter.co',
     cedula: '1035444555',
+    passwordHash: defaultPasswordHash,
     telefono: '3187778899',
     role: 'VOLUNTARIO',
     departamentoAsignado: 'Cundinamarca',
@@ -333,6 +339,10 @@ class MemoryStore {
   getEvents() { return this.events; }
   getTasks() { return this.tasks; }
 
+  findUserByCedula(cedula: string) {
+    return this.users.find((u) => u.cedula === cedula);
+  }
+
   addUser(user: Omit<MockUser, 'id' | 'createdAt'>) {
     const newUser: MockUser = {
       ...user,
@@ -341,6 +351,20 @@ class MemoryStore {
     };
     this.users.push(newUser);
     return newUser;
+  }
+
+  updateUser(id: string, changes: Partial<Omit<MockUser, 'id' | 'createdAt'>>) {
+    const index = this.users.findIndex((u) => u.id === id);
+    if (index === -1) return null;
+    this.users[index] = { ...this.users[index], ...changes };
+    return this.users[index];
+  }
+
+  deleteUser(id: string) {
+    const index = this.users.findIndex((u) => u.id === id);
+    if (index === -1) return false;
+    this.users.splice(index, 1);
+    return true;
   }
 
   addVoter(voter: Omit<MockVoter, 'id' | 'createdAt'>) {

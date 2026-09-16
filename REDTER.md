@@ -7,6 +7,12 @@ de base de datos, diseño y stack técnico.
 > al planeado originalmente (Express + React/Vite + Drizzle en vez de Next.js + Prisma +
 > NextAuth). Este documento se actualizó para reflejar lo que **realmente existe** en el
 > repo a la fecha, y marca explícitamente lo que sigue pendiente o requiere decisión.
+>
+> **Actualización posterior:** se implementaron los tres módulos priorizados de la
+> sección 4 sobre el stack real (login por cédula con validación de contraseña, CRUD
+> completo de usuarios, y la paleta de colores de la sección 3 aplicada en login/
+> dashboard/usuarios). El detalle de qué quedó hecho y qué sigue pendiente está marcado
+> en cada sección.
 
 ---
 
@@ -22,11 +28,13 @@ reuniones y agenda en un solo lugar.
 
 Proyecto desarrollado bajo DevSoluciones (devsoluciones.com).
 
-> ⚠️ **Pendiente de alinear:** el `package.json` del repo todavía identifica el proyecto
-> como `"sige-electoral"` / "SIGE Electoral" (nombre y branding de una versión anterior).
-> Falta decidir y aplicar el nombre definitivo (`REDTER`) de forma consistente en
-> `package.json`, el `<title>` del cliente, el health check (`/health`) y el nombre de
-> la base de datos (actualmente `sige_electoral`).
+> ✅ **Resuelto:** `package.json` (raíz y `client/`), el `<title>` del cliente y el
+> health check (`/health`) ya usan el nombre `REDTER` de forma consistente.
+>
+> ⚠️ **Pendiente menor:** el nombre de la base de datos por defecto sigue siendo
+> `sige_electoral` (`.env.example`, `drizzle.config.ts`) — se dejó así para no romper
+> una configuración ya existente en Hostinger; renombrarlo es una decisión de infraestructura,
+> no de código.
 
 ---
 
@@ -84,11 +92,12 @@ Proyecto desarrollado bajo DevSoluciones (devsoluciones.com).
 Todo el login y el dashboard deben ser **responsive**, adaptables a cualquier tipo de
 pantalla (móvil, tablet, escritorio).
 
-> ⚠️ **No implementado tal cual:** `client/tailwind.config.js` define una paleta
-> distinta (`brand.*` en tonos celeste `#0284c7` y `redter.*` en fondo oscuro
-> `#0f172a` con acentos `sky`/`emerald`/`amber`/`crimson`), es decir, un tema **oscuro**,
-> no el tema claro (blanco/marino) descrito aquí. Falta decidir cuál paleta es la
-> oficial y aplicarla de forma consistente.
+> ✅ **Implementado:** `client/tailwind.config.js` ahora define los tokens `navy`,
+> `surface` y `line` con estos mismos valores hex, y las pantallas de login, dashboard
+> (sidebar, header, tarjetas) y gestión de usuarios ya usan el tema claro
+> blanco/marino en vez del tema oscuro anterior. Las pantallas de Votantes y Agenda
+> (fuera del alcance de la primera entrega) siguen con el tema oscuro original —
+> pendiente de re-tematizar cuando esos módulos entren en desarrollo.
 
 ---
 
@@ -101,17 +110,17 @@ pantalla (móvil, tablet, escritorio).
 - Botón "Ingresar"
 - Responsive
 
-> 🔴 **Pendiente crítico:** el login implementado (`src/modules/auth/auth.router.ts`)
-> difiere del diseño en dos puntos importantes:
-> 1. Autentica por **email**, no por cédula, como pide esta sección.
-> 2. **No valida la contraseña.** El código acepta cualquier valor de `password`
->    (comentario en el propio archivo: *"En demo aceptamos cualquier password o
->    redter123"*), pese a que `bcryptjs` ya está instalado y cada usuario tiene
->    `passwordHash`. Esto debe corregirse antes de cualquier despliegue, incluso de
->    pruebas con datos reales.
-> 3. El login consulta un `memoryStore` en memoria (`src/db/mockStore.ts`), no la base
->    de datos real — aunque la conexión Drizzle/MySQL ya está configurada en
->    `src/db/index.ts`, todavía no está conectada a los endpoints de auth/usuarios.
+> ✅ **Corregido:** `src/modules/auth/auth.router.ts` ahora autentica por **cédula**
+> (`POST /api/v1/auth/login` recibe `{ cedula, password }`) y valida la contraseña real
+> con `bcrypt.compare` contra `passwordHash` — ya no acepta cualquier valor. `GET
+> /auth/me` también deja de filtrar el `passwordHash` en la respuesta. Verificado con
+> pruebas manuales: login rechaza contraseña incorrecta, acepta la correcta, y el nuevo
+> usuario creado vía el CRUD puede iniciar sesión con su propia contraseña.
+>
+> ⚠️ **Sigue pendiente:** el login consulta un `memoryStore` en memoria
+> (`src/db/mockStore.ts`), no la base de datos real — la conexión Drizzle/MySQL ya está
+> configurada en `src/db/index.ts` pero todavía no está conectada a los endpoints de
+> auth/usuarios (ver sección 7).
 
 ### 4.2 Dashboard (panel administrativo)
 - Layout con **sidebar** de navegación
@@ -131,11 +140,15 @@ pantalla (móvil, tablet, escritorio).
   - Botón **Editar** → carga la información del registro en la misma ventana emergente
   - Botón **Eliminar** → muestra alerta de confirmación antes de eliminar el registro
 
-> 🟡 **Parcialmente implementado:** `client/src/pages/UsersPage.tsx` y
-> `src/modules/users/users.router.ts` ya tienen listado, modal de creación y roles con
-> scoping por jerarquía (ABAC). **Falta verificar/completar:** buscador, filtros,
-> spinner de estado activo, botón Editar (precarga en el mismo modal) y confirmación de
-> Eliminar — revisar contra el archivo actual antes de dar el módulo por cerrado.
+> ✅ **Completado:** `client/src/pages/UsersPage.tsx` y `src/modules/users/users.router.ts`
+> ya incluyen buscador (`?q=`, filtra nombre/email/cédula), filtro por rol (`?role=`),
+> botón Editar que recarga el registro en el mismo modal (`PUT /:id`), botón Eliminar
+> con confirmación (`window.confirm` + `DELETE /:id`, bloqueado para no eliminar el
+> propio usuario), y el indicador de estado activo es ahora un toggle clicable
+> (`PATCH /:id/activo`) con spinner mientras se actualiza. La creación de usuario ahora
+> exige cédula y contraseña (se hashean con bcrypt) para que el usuario creado pueda
+> iniciar sesión de inmediato. Probado end-to-end con curl: búsqueda, filtro, alta,
+> login del usuario recién creado, edición, toggle y borrado.
 
 ---
 
@@ -328,32 +341,34 @@ Sin tablas propias — vistas/queries agregadas sobre las tablas anteriores.
 - Control de acceso por rol a nivel de API (middleware) y de UI
 - Interfaz y mensajes de validación en español (Colombia)
 
-> 🔴 **Hallazgos de esta revisión, pendientes de corregir:**
-> - El endpoint de login (`src/modules/auth/auth.router.ts`) **no valida la
->   contraseña real** contra `passwordHash` — acepta cualquier valor. Debe usar
->   `bcrypt.compare` antes de emitir el JWT.
-> - Los endpoints de auth/usuarios usan un `memoryStore` en memoria en vez de la
->   base de datos real (`src/db/index.ts` con Drizzle ya está listo pero no conectado).
-> - No hay cifrado en reposo implementado todavía para cédula/teléfono de votantes.
-> - El archivo `.env` está commiteado en el repositorio (aunque hoy es idéntico a
->   `.env.example`, sin secretos reales). Se recomienda quitarlo del control de
->   versiones y agregarlo a `.gitignore` para evitar que a futuro se suba un secreto
->   real por error.
+> ✅ **Corregido:** el login ahora valida la contraseña real con `bcrypt.compare`
+> antes de emitir el JWT (ver sección 4.1). `.env` se sacó del control de versiones
+> (`git rm --cached .env`) y ahora está en `.gitignore` junto con `dist/` y
+> `client/dist/` (carpetas de build que no deberían versionarse, ya que el propio
+> flujo de despliegue las regenera con `npm run build`).
+>
+> ⚠️ **Pendientes:**
+> - Los endpoints de auth/usuarios siguen usando un `memoryStore` en memoria en vez de
+>   la base de datos real (`src/db/index.ts` con Drizzle ya está listo pero no
+>   conectado). Es el siguiente paso antes de un despliegue real: migrar
+>   `mockStore.ts` a queries Drizzle contra MySQL/MariaDB.
+> - No hay cifrado en reposo implementado todavía para cédula/teléfono de votantes
+>   (el módulo de votantes es de la sección 5, fuera de esta primera entrega).
 
 ---
 
 ## 8. Estado actual del proyecto
-- [x] Nombre y propuesta de producto definidos (REDTER) — *pendiente aplicar el nombre en el código (ver sección 1)*
-- [~] Stack definido — *definido originalmente como Next.js + Prisma + NextAuth; el código real usa Express + Vite + Drizzle + JWT (ver sección 2); falta decisión formal*
-- [~] Paleta de colores definida — *definida en este documento, pero no aplicada en `tailwind.config.js` (ver sección 3)*
+- [x] Nombre y propuesta de producto definidos (REDTER) — *aplicado en `package.json`, `<title>` y health check*
+- [~] Stack definido — *definido originalmente como Next.js + Prisma + NextAuth; el código real usa Express + Vite + Drizzle + JWT (ver sección 2); sigue pendiente la decisión formal de cuál es el stack oficial*
+- [x] Paleta de colores definida y aplicada — *tokens `navy`/`surface`/`line` en `tailwind.config.js`, aplicados en login, dashboard y gestión de usuarios*
 - [x] Subdominio `redter.devsoluciones.com` resuelto en Hostinger
 - [x] Módulos de primera entrega priorizados (login, dashboard, gestión de usuarios)
 - [x] Proyecto base generado — *Express API + cliente React/Vite ya existen en el repo*
 - [x] Schema de base de datos para usuarios, votantes, eventos y territorio implementado en Drizzle — *no en Prisma; ver sección 6*
-- [ ] Login funcional (cédula + contraseña) — *implementado con email y sin validar contraseña; pendiente corrección crítica (ver secciones 4.1 y 7)*
-- [x] Dashboard con sidebar
-- [~] Datatable de gestión de usuarios (CRUD completo + roles) — *listado, alta y roles con scoping ya existen; falta confirmar buscador, filtros, spinner de activo, edición y confirmación de borrado*
-- [ ] Conexión a base de datos remota probada — *pool Drizzle/MySQL configurado, pero los endpoints todavía leen de un store en memoria, no de la BD*
+- [x] Login funcional (cédula + contraseña) — *corregido: autentica por cédula y valida la contraseña real con bcrypt (ver sección 4.1)*
+- [x] Dashboard con sidebar — *retematizado con la paleta clara*
+- [x] Datatable de gestión de usuarios (CRUD completo + roles) — *buscador, filtro por rol, editar, eliminar con confirmación y toggle de activo con spinner, todo probado end-to-end*
+- [ ] Conexión a base de datos remota probada — *pool Drizzle/MySQL configurado, pero los endpoints todavía leen de un store en memoria, no de la BD; siguiente paso pendiente*
 - [ ] Primer despliegue en Hostinger
 
 **Leyenda:** `[x]` hecho · `[~]` parcial o en conflicto con el plan · `[ ]` pendiente

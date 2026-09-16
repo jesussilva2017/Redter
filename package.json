@@ -1,7 +1,7 @@
 {
-  "name": "sige-electoral",
+  "name": "redter",
   "version": "1.0.0",
-  "description": "SIGE Electoral - Software de gestión electoral y CRM político de Redter Inteligencia",
+  "description": "REDTER - Plataforma de gestión territorial y relacionamiento comunitario",
   "main": "dist/server.js",
   "scripts": {
     "dev:server": "tsx watch src/server.ts",

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import { memoryStore } from '../../db/mockStore';
 import { authenticate, AuthenticatedRequest } from '../../middlewares/auth';
@@ -11,30 +12,35 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export const authRouter = Router();
 
-// POST /api/v1/auth/login
-authRouter.post('/login', (req, res) => {
-  const { email, password } = req.body;
+// POST /api/v1/auth/login — usuario: cédula, contraseña: password
+authRouter.post('/login', async (req, res) => {
+  const { cedula, password } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: 'El correo electrónico es requerido.' });
+  if (!cedula || !password) {
+    return res.status(400).json({ error: 'La cédula y la contraseña son requeridas.' });
   }
 
-  // Buscar usuario en el store
-  const user = memoryStore.getUsers().find((u) => u.email.toLowerCase() === email.toLowerCase());
+  // Buscar usuario por cédula (usuario de login)
+  const user = memoryStore.findUserByCedula(String(cedula).trim());
 
   if (!user) {
-    return res.status(401).json({ error: 'Credenciales inválidas. Usuario no encontrado.' });
+    return res.status(401).json({ error: 'Credenciales inválidas.' });
   }
 
   if (!user.activo) {
     return res.status(403).json({ error: 'Cuenta inactiva. Contacte al Administrador de Campaña.' });
   }
 
-  // En demo aceptamos cualquier password o redter123
+  const passwordValida = await bcrypt.compare(password, user.passwordHash);
+  if (!passwordValida) {
+    return res.status(401).json({ error: 'Credenciales inválidas.' });
+  }
+
   const tokenPayload = {
     userId: user.id,
     nombre: user.nombre,
     email: user.email,
+    cedula: user.cedula,
     role: user.role,
     departamentoAsignado: user.departamentoAsignado,
     municipioAsignado: user.municipioAsignado,
@@ -59,8 +65,9 @@ authRouter.get('/me', authenticate, (req: AuthenticatedRequest, res) => {
 
   const user = memoryStore.getUsers().find((u) => u.id === req.user?.userId);
   if (!user) {
-    return res.status(444).json({ error: 'Usuario no encontrado' });
+    return res.status(404).json({ error: 'Usuario no encontrado' });
   }
 
-  return res.json({ user });
+  const { passwordHash, ...safeUser } = user;
+  return res.json({ user: safeUser });
 });

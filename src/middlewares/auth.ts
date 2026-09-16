@@ -12,6 +12,7 @@ export interface TokenPayload {
   userId: string;
   nombre: string;
   email: string;
+  cedula: string;
   role: UserRole;
   departamentoAsignado?: string | null;
   municipioAsignado?: string | null;

@@ -4,7 +4,7 @@ export interface User {
   id: string;
   nombre: string;
   email: string;
-  cedula?: string;
+  cedula: string;
   telefono?: string;
   role: UserRole;
   parentLeaderId?: string | null;

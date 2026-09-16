@@ -14,9 +14,9 @@ const MainLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center text-slate-300 gap-3">
-        <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-heading text-sm tracking-wide">Cargando SIGE Electoral...</p>
+      <div className="min-h-screen bg-surface-subtle flex flex-col justify-center items-center text-gray-500 gap-3">
+        <div className="w-10 h-10 border-4 border-navy border-t-transparent rounded-full animate-spin"></div>
+        <p className="font-heading text-sm tracking-wide">Cargando REDTER...</p>
       </div>
     );
   }
@@ -41,23 +41,23 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="flex min-h-screen bg-surface-subtle text-gray-800 font-sans">
       {/* Sidebar navigation */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Navbar */}
-        <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-            <ShieldCheck className="w-4 h-4 text-sky-400" />
-            <span>Sistema Inteligente de Gestión Electoral — Colombia</span>
+        <header className="bg-white/90 backdrop-blur-md border-b border-line sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+            <ShieldCheck className="w-4 h-4 text-navy" />
+            <span>Plataforma de Gestión Territorial y Relacionamiento Comunitario</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700/80 text-xs font-semibold text-sky-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Prensa & Operaciones Activas
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-subtle border border-line text-xs font-semibold text-navy">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Operaciones Activas
             </div>
           </div>
         </header>

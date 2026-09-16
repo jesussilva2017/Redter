@@ -5,7 +5,7 @@ import axios from 'axios';
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password?: string) => Promise<void>;
+  login: (cedula: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -37,8 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password = 'redter123') => {
-    const response = await axios.post('/api/v1/auth/login', { email, password });
+  const login = async (cedula: string, password: string) => {
+    const response = await axios.post('/api/v1/auth/login', { cedula, password });
     const newToken = response.data.token;
     const userData = response.data.user;
 

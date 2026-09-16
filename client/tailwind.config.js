@@ -8,20 +8,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          500: '#0284c7',
-          600: '#0284c7',
-          700: '#0369a1',
-          900: '#0c4a6e',
+        navy: {
+          DEFAULT: '#1D3557',
+          deep: '#1E3A8A',
         },
-        redter: {
-          dark: '#0f172a',
-          card: '#1e293b',
-          accent: '#0284c7',
-          crimson: '#dc2626',
-        }
+        surface: {
+          DEFAULT: '#FFFFFF',
+          subtle: '#F8F9FA',
+        },
+        line: {
+          DEFAULT: '#E9ECEF',
+          strong: '#D1D5DB',
+        },
       },
     },
   },
