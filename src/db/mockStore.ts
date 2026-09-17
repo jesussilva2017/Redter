@@ -1,32 +1,9 @@
-import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface MockUser {
-  id: string;
-  nombre: string;
-  email: string;
-  cedula: string;
-  passwordHash: string;
-  telefono: string;
-  role: 'SUPER_ADMIN' | 'ADMIN_CAMPANA' | 'COORDINADOR' | 'LIDER' | 'TESTIGO' | 'VOLUNTARIO';
-  parentLeaderId?: string | null;
-  departamentoAsignado?: string | null;
-  municipioAsignado?: string | null;
-  puestoAsignadoId?: string | null;
-  mesaAsignada?: number | null;
-  activo: boolean;
-  createdAt: string;
-}
-
-export interface MockPuesto {
-  id: string;
-  departamento: string;
-  municipio: string;
-  zona: string;
-  nombrePuesto: string;
-  direccion: string;
-  mesasTotales: number;
-}
+// Nota: usuarios y puestos de votación ya viven en MySQL/MariaDB vía Drizzle
+// (ver src/db/schema.ts). Este store en memoria queda solo para los módulos
+// que aún no se migran (votantes, agenda, tareas — sección 5 de REDTER.md),
+// y referencia esos mismos IDs de usuario/puesto para mantener consistencia.
 
 export interface MockVoter {
   id: string;
@@ -86,85 +63,7 @@ export interface MockTask {
   createdAt: string;
 }
 
-const defaultPasswordHash = bcrypt.hashSync('redter123', 10);
-
-// Data Inicial de Prueba (Colombia)
-export const initialPuestos: MockPuesto[] = [
-  { id: 'puesto-1', departamento: 'Cundinamarca', municipio: 'Bogotá D.C.', zona: 'Zona 1 - Usaquén', nombrePuesto: 'Colegio Claustro Moderno', direccion: 'Cra 7 # 170-20', mesasTotales: 25 },
-  { id: 'puesto-2', departamento: 'Cundinamarca', municipio: 'Bogotá D.C.', zona: 'Zona 2 - Chapinero', nombrePuesto: 'Universidad Pedagógica Nacional', direccion: 'Calle 72 # 11-86', mesasTotales: 30 },
-  { id: 'puesto-3', departamento: 'Antioquia', municipio: 'Medellín', zona: 'Zona 3 - El Poblado', nombrePuesto: 'I.E. INEM José Félix de Restrepo', direccion: 'Cra 48 # 1-125', mesasTotales: 40 },
-  { id: 'puesto-4', departamento: 'Valle del Cauca', municipio: 'Cali', zona: 'Zona 1 - Comuna 2', nombrePuesto: 'Colegio Santa Librada', direccion: 'Calle 5 # 14-00', mesasTotales: 35 },
-  { id: 'puesto-5', departamento: 'Atlántico', municipio: 'Barranquilla', zona: 'Zona 2 - Norte', nombrePuesto: 'Universidad del Norte', direccion: 'Km 5 Vía Puerto Colombia', mesasTotales: 45 },
-];
-
-export const initialUsers: MockUser[] = [
-  {
-    id: 'user-admin',
-    nombre: 'Carlos Mendoza (Gerente Campaña)',
-    email: 'admin@redter.co',
-    cedula: '1018234567',
-    passwordHash: defaultPasswordHash,
-    telefono: '3001234567',
-    role: 'ADMIN_CAMPANA',
-    activo: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-coord-bogota',
-    nombre: 'Dra. Patricia Gómez',
-    email: 'coord.bogota@redter.co',
-    cedula: '52890123',
-    passwordHash: defaultPasswordHash,
-    telefono: '3109876543',
-    role: 'COORDINADOR',
-    departamentoAsignado: 'Cundinamarca',
-    municipioAsignado: 'Bogotá D.C.',
-    activo: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-lider-usaquen',
-    nombre: 'Andrés Felipe Restrepo',
-    email: 'lider.usaquen@redter.co',
-    cedula: '79876543',
-    passwordHash: defaultPasswordHash,
-    telefono: '3156549870',
-    role: 'LIDER',
-    parentLeaderId: 'user-coord-bogota',
-    departamentoAsignado: 'Cundinamarca',
-    municipioAsignado: 'Bogotá D.C.',
-    puestoAsignadoId: 'puesto-1',
-    activo: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-testigo-mesa1',
-    nombre: 'Valeria Ríos (Testigo Mesa 1)',
-    email: 'testigo.mesa1@redter.co',
-    cedula: '1020304050',
-    passwordHash: defaultPasswordHash,
-    telefono: '3201112233',
-    role: 'TESTIGO',
-    puestoAsignadoId: 'puesto-1',
-    mesaAsignada: 1,
-    activo: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-voluntario-1',
-    nombre: 'Mateo Osorio (Voluntario Jóvenes)',
-    email: 'voluntario.mateo@redter.co',
-    cedula: '1035444555',
-    passwordHash: defaultPasswordHash,
-    telefono: '3187778899',
-    role: 'VOLUNTARIO',
-    departamentoAsignado: 'Cundinamarca',
-    municipioAsignado: 'Bogotá D.C.',
-    activo: true,
-    createdAt: new Date().toISOString(),
-  },
-];
-
+// Data Inicial de Prueba (Colombia) — referencia IDs de usuarios/puestos sembrados en la BD real
 export const initialVoters: MockVoter[] = [
   {
     id: 'voter-1',
@@ -327,45 +226,13 @@ export const initialTasks: MockTask[] = [
 
 // Estado en Memoria
 class MemoryStore {
-  puestos: MockPuesto[] = [...initialPuestos];
-  users: MockUser[] = [...initialUsers];
   voters: MockVoter[] = [...initialVoters];
   events: MockEvent[] = [...initialEvents];
   tasks: MockTask[] = [...initialTasks];
 
-  getUsers() { return this.users; }
   getVoters() { return this.voters; }
-  getPuestos() { return this.puestos; }
   getEvents() { return this.events; }
   getTasks() { return this.tasks; }
-
-  findUserByCedula(cedula: string) {
-    return this.users.find((u) => u.cedula === cedula);
-  }
-
-  addUser(user: Omit<MockUser, 'id' | 'createdAt'>) {
-    const newUser: MockUser = {
-      ...user,
-      id: `user-${uuidv4().substring(0, 8)}`,
-      createdAt: new Date().toISOString(),
-    };
-    this.users.push(newUser);
-    return newUser;
-  }
-
-  updateUser(id: string, changes: Partial<Omit<MockUser, 'id' | 'createdAt'>>) {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) return null;
-    this.users[index] = { ...this.users[index], ...changes };
-    return this.users[index];
-  }
-
-  deleteUser(id: string) {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) return false;
-    this.users.splice(index, 1);
-    return true;
-  }
 
   addVoter(voter: Omit<MockVoter, 'id' | 'createdAt'>) {
     const newVoter: MockVoter = {

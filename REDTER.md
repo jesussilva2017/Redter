@@ -117,10 +117,10 @@ pantalla (móvil, tablet, escritorio).
 > pruebas manuales: login rechaza contraseña incorrecta, acepta la correcta, y el nuevo
 > usuario creado vía el CRUD puede iniciar sesión con su propia contraseña.
 >
-> ⚠️ **Sigue pendiente:** el login consulta un `memoryStore` en memoria
-> (`src/db/mockStore.ts`), no la base de datos real — la conexión Drizzle/MySQL ya está
-> configurada en `src/db/index.ts` pero todavía no está conectada a los endpoints de
-> auth/usuarios (ver sección 7).
+> ✅ **Conectado a la BD real:** el login ya consulta la tabla `users` vía Drizzle/MySQL
+> (`src/db/index.ts`), no el `memoryStore`. Probado end-to-end contra un MariaDB real
+> (local, mismo motor y schema que Hostinger): login, `/auth/me`, y el usuario creado
+> desde el CRUD puede iniciar sesión de inmediato leyendo de la base de datos.
 
 ### 4.2 Dashboard (panel administrativo)
 - Layout con **sidebar** de navegación
@@ -347,13 +347,20 @@ Sin tablas propias — vistas/queries agregadas sobre las tablas anteriores.
 > `client/dist/` (carpetas de build que no deberían versionarse, ya que el propio
 > flujo de despliegue las regenera con `npm run build`).
 >
+> ✅ **Auth y usuarios ya usan la base de datos real:** `auth.router.ts`,
+> `users.router.ts` y `territory.router.ts` consultan las tablas `users` y
+> `puestos_votacion` vía Drizzle (`src/db/index.ts`), ya no el `memoryStore`. Se agregó
+> `src/db/seed.ts` (`npm run db:seed`) para poblar los usuarios y puestos de
+> demostración con contraseñas reales hasheadas. Probado contra un MariaDB real
+> (mismo motor que Hostinger) corriendo en un entorno local de pruebas.
+>
 > ⚠️ **Pendientes:**
-> - Los endpoints de auth/usuarios siguen usando un `memoryStore` en memoria en vez de
->   la base de datos real (`src/db/index.ts` con Drizzle ya está listo pero no
->   conectado). Es el siguiente paso antes de un despliegue real: migrar
->   `mockStore.ts` a queries Drizzle contra MySQL/MariaDB.
-> - No hay cifrado en reposo implementado todavía para cédula/teléfono de votantes
->   (el módulo de votantes es de la sección 5, fuera de esta primera entrega).
+> - Votantes, agenda y tareas (sección 5, fuera de esta primera entrega) siguen en el
+>   `memoryStore` en memoria — se migrarán cuando esos módulos entren en desarrollo.
+> - No hay cifrado en reposo implementado todavía para cédula/teléfono de votantes.
+> - Falta correr `npm run db:seed` contra la base de datos real de Hostinger al
+>   desplegar (las credenciales de producción no se usaron ni se guardaron en el
+>   repo — solo se probó localmente con una base de datos de prueba).
 
 ---
 
@@ -368,7 +375,7 @@ Sin tablas propias — vistas/queries agregadas sobre las tablas anteriores.
 - [x] Login funcional (cédula + contraseña) — *corregido: autentica por cédula y valida la contraseña real con bcrypt (ver sección 4.1)*
 - [x] Dashboard con sidebar — *retematizado con la paleta clara*
 - [x] Datatable de gestión de usuarios (CRUD completo + roles) — *buscador, filtro por rol, editar, eliminar con confirmación y toggle de activo con spinner, todo probado end-to-end*
-- [ ] Conexión a base de datos remota probada — *pool Drizzle/MySQL configurado, pero los endpoints todavía leen de un store en memoria, no de la BD; siguiente paso pendiente*
+- [x] Conexión a base de datos real probada — *auth/usuarios/territorio migrados de memoria a Drizzle/MySQL, probado end-to-end contra MariaDB; falta correr el seed contra la base real de Hostinger al desplegar*
 - [ ] Primer despliegue en Hostinger
 
 **Leyenda:** `[x]` hecho · `[~]` parcial o en conflicto con el plan · `[ ]` pendiente

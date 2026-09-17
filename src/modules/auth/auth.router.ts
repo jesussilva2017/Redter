@@ -2,7 +2,9 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import { memoryStore } from '../../db/mockStore';
+import { eq } from 'drizzle-orm';
+import { db } from '../../db';
+import { users } from '../../db/schema';
 import { authenticate, AuthenticatedRequest } from '../../middlewares/auth';
 
 dotenv.config();
@@ -21,7 +23,7 @@ authRouter.post('/login', async (req, res) => {
   }
 
   // Buscar usuario por cédula (usuario de login)
-  const user = memoryStore.findUserByCedula(String(cedula).trim());
+  const [user] = await db.select().from(users).where(eq(users.cedula, String(cedula).trim())).limit(1);
 
   if (!user) {
     return res.status(401).json({ error: 'Credenciales inválidas.' });
@@ -58,12 +60,12 @@ authRouter.post('/login', async (req, res) => {
 });
 
 // GET /api/v1/auth/me
-authRouter.get('/me', authenticate, (req: AuthenticatedRequest, res) => {
+authRouter.get('/me', authenticate, async (req: AuthenticatedRequest, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'No autenticado' });
   }
 
-  const user = memoryStore.getUsers().find((u) => u.id === req.user?.userId);
+  const [user] = await db.select().from(users).where(eq(users.id, req.user.userId)).limit(1);
   if (!user) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
   }

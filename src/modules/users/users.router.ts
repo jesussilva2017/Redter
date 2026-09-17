@@ -1,11 +1,16 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { memoryStore, MockUser } from '../../db/mockStore';
+import { v4 as uuidv4 } from 'uuid';
+import { and, eq, like, or } from 'drizzle-orm';
+import { db } from '../../db';
+import { users } from '../../db/schema';
 import { authenticate, authorizeRoles, AuthenticatedRequest } from '../../middlewares/auth';
 
 export const usersRouter = Router();
 
-const sanitize = (user: MockUser) => {
+type UserRow = typeof users.$inferSelect;
+
+const sanitize = (user: UserRow) => {
   const { passwordHash, ...safeUser } = user;
   return safeUser;
 };
@@ -14,35 +19,32 @@ const sanitize = (user: MockUser) => {
 usersRouter.use(authenticate);
 
 // GET /api/v1/users - Listar usuarios según jerarquía/scoping, con buscador y filtro de rol
-usersRouter.get('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER'), (req: AuthenticatedRequest, res) => {
-  const user = req.user!;
-  let allUsers = memoryStore.getUsers();
+usersRouter.get('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER'), async (req: AuthenticatedRequest, res) => {
+  const currentUser = req.user!;
+  const { role, q } = req.query;
+
+  const conditions = [];
+  if (role) {
+    conditions.push(eq(users.role, role as UserRow['role']));
+  }
+  if (q) {
+    const term = `%${String(q)}%`;
+    conditions.push(or(like(users.nombre, term), like(users.email, term), like(users.cedula, term)));
+  }
+
+  let allUsers = conditions.length
+    ? await db.select().from(users).where(and(...conditions))
+    : await db.select().from(users);
 
   // Filtrado por scoping ABAC
-  if (user.role === 'COORDINADOR') {
+  if (currentUser.role === 'COORDINADOR') {
     allUsers = allUsers.filter(u =>
-      u.id === user.userId ||
-      u.parentLeaderId === user.userId ||
-      (user.municipioAsignado && u.municipioAsignado === user.municipioAsignado)
+      u.id === currentUser.userId ||
+      u.parentLeaderId === currentUser.userId ||
+      (currentUser.municipioAsignado && u.municipioAsignado === currentUser.municipioAsignado)
     );
-  } else if (user.role === 'LIDER') {
-    allUsers = allUsers.filter(u => u.id === user.userId || u.parentLeaderId === user.userId);
-  }
-
-  // Filtro por rol
-  const { role, q } = req.query;
-  if (role) {
-    allUsers = allUsers.filter(u => u.role === role);
-  }
-
-  // Buscador libre (nombre, email, cédula)
-  if (q) {
-    const term = String(q).toLowerCase();
-    allUsers = allUsers.filter(u =>
-      u.nombre.toLowerCase().includes(term) ||
-      u.email.toLowerCase().includes(term) ||
-      u.cedula.toLowerCase().includes(term)
-    );
+  } else if (currentUser.role === 'LIDER') {
+    allUsers = allUsers.filter(u => u.id === currentUser.userId || u.parentLeaderId === currentUser.userId);
   }
 
   return res.json({ users: allUsers.map(sanitize) });
@@ -68,39 +70,43 @@ usersRouter.post('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADO
     return res.status(400).json({ error: 'Nombre, email, cédula, contraseña y rol son requeridos.' });
   }
 
-  // Verificar duplicados de email y cédula (cédula es el usuario de login)
-  const existingEmail = memoryStore.getUsers().find(u => u.email.toLowerCase() === email.toLowerCase());
+  const cedulaLimpia = String(cedula).trim();
+
+  const [existingEmail] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (existingEmail) {
     return res.status(400).json({ error: 'Ya existe un usuario registrado con este correo electrónico.' });
   }
-  const existingCedula = memoryStore.findUserByCedula(String(cedula).trim());
+  const [existingCedula] = await db.select().from(users).where(eq(users.cedula, cedulaLimpia)).limit(1);
   if (existingCedula) {
     return res.status(400).json({ error: 'Ya existe un usuario registrado con esta cédula.' });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-
-  const newUser = memoryStore.addUser({
+  const newUser: UserRow = {
+    id: `user-${uuidv4().substring(0, 8)}`,
     nombre,
     email,
-    cedula: String(cedula).trim(),
+    cedula: cedulaLimpia,
     passwordHash,
     telefono: telefono || '',
     role,
-    parentLeaderId: parentLeaderId || req.user?.userId,
+    parentLeaderId: parentLeaderId || req.user?.userId || null,
     departamentoAsignado: departamentoAsignado || 'Cundinamarca',
     municipioAsignado: municipioAsignado || 'Bogotá D.C.',
-    puestoAsignadoId,
+    puestoAsignadoId: puestoAsignadoId || null,
     mesaAsignada: mesaAsignada ? Number(mesaAsignada) : null,
     activo: true,
-  });
+    createdAt: new Date(),
+  };
+
+  await db.insert(users).values(newUser);
 
   return res.status(201).json({ message: 'Usuario creado exitosamente', user: sanitize(newUser) });
 });
 
 // GET /api/v1/users/:id
-usersRouter.get('/:id', (req: AuthenticatedRequest, res) => {
-  const user = memoryStore.getUsers().find(u => u.id === req.params.id);
+usersRouter.get('/:id', async (req: AuthenticatedRequest, res) => {
+  const [user] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!user) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
   }
@@ -109,7 +115,7 @@ usersRouter.get('/:id', (req: AuthenticatedRequest, res) => {
 
 // PUT /api/v1/users/:id - Editar usuario existente (recarga en el mismo modal en el cliente)
 usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
-  const existing = memoryStore.getUsers().find(u => u.id === req.params.id);
+  const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
   }
@@ -131,23 +137,21 @@ usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINA
     return res.status(400).json({ error: 'Nombre, email, cédula y rol son requeridos.' });
   }
 
-  const duplicateEmail = memoryStore.getUsers().find(
-    u => u.id !== existing.id && u.email.toLowerCase() === email.toLowerCase()
-  );
-  if (duplicateEmail) {
+  const cedulaLimpia = String(cedula).trim();
+
+  const [duplicateEmail] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (duplicateEmail && duplicateEmail.id !== existing.id) {
     return res.status(400).json({ error: 'Ya existe otro usuario con este correo electrónico.' });
   }
-  const duplicateCedula = memoryStore.getUsers().find(
-    u => u.id !== existing.id && u.cedula === String(cedula).trim()
-  );
-  if (duplicateCedula) {
+  const [duplicateCedula] = await db.select().from(users).where(eq(users.cedula, cedulaLimpia)).limit(1);
+  if (duplicateCedula && duplicateCedula.id !== existing.id) {
     return res.status(400).json({ error: 'Ya existe otro usuario con esta cédula.' });
   }
 
-  const changes: Partial<MockUser> = {
+  const changes: Partial<UserRow> = {
     nombre,
     email,
-    cedula: String(cedula).trim(),
+    cedula: cedulaLimpia,
     telefono: telefono || '',
     role,
     departamentoAsignado,
@@ -161,24 +165,28 @@ usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINA
     changes.passwordHash = await bcrypt.hash(password, 10);
   }
 
-  const updated = memoryStore.updateUser(existing.id, changes);
-  return res.json({ message: 'Usuario actualizado exitosamente', user: sanitize(updated!) });
+  await db.update(users).set(changes).where(eq(users.id, existing.id));
+  const [updated] = await db.select().from(users).where(eq(users.id, existing.id)).limit(1);
+
+  return res.json({ message: 'Usuario actualizado exitosamente', user: sanitize(updated) });
 });
 
 // PATCH /api/v1/users/:id/activo - Alternar estado activo/inactivo
-usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), (req: AuthenticatedRequest, res) => {
-  const existing = memoryStore.getUsers().find(u => u.id === req.params.id);
+usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
+  const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
   }
 
-  const updated = memoryStore.updateUser(existing.id, { activo: !existing.activo });
-  return res.json({ message: 'Estado actualizado', user: sanitize(updated!) });
+  await db.update(users).set({ activo: !existing.activo }).where(eq(users.id, existing.id));
+  const [updated] = await db.select().from(users).where(eq(users.id, existing.id)).limit(1);
+
+  return res.json({ message: 'Estado actualizado', user: sanitize(updated) });
 });
 
 // DELETE /api/v1/users/:id - Eliminar usuario (confirmado previamente en el cliente)
-usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), (req: AuthenticatedRequest, res) => {
-  const existing = memoryStore.getUsers().find(u => u.id === req.params.id);
+usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
+  const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
   }
@@ -187,6 +195,6 @@ usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORD
     return res.status(400).json({ error: 'No puedes eliminar tu propio usuario.' });
   }
 
-  memoryStore.deleteUser(existing.id);
+  await db.delete(users).where(eq(users.id, existing.id));
   return res.json({ message: 'Usuario eliminado exitosamente' });
 });

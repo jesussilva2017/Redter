@@ -1,20 +1,25 @@
 import { Router } from 'express';
-import { memoryStore } from '../../db/mockStore';
+import { and, eq } from 'drizzle-orm';
+import { db } from '../../db';
+import { puestosVotacion } from '../../db/schema';
 
 export const territoryRouter = Router();
 
 // GET /api/v1/territory/puestos - Puestos de votación en Colombia
-territoryRouter.get('/puestos', (req, res) => {
+territoryRouter.get('/puestos', async (req, res) => {
   const { departamento, municipio } = req.query;
-  let puestos = memoryStore.getPuestos();
 
+  const conditions = [];
   if (departamento) {
-    puestos = puestos.filter(p => p.departamento.toLowerCase() === String(departamento).toLowerCase());
+    conditions.push(eq(puestosVotacion.departamento, String(departamento)));
+  }
+  if (municipio) {
+    conditions.push(eq(puestosVotacion.municipio, String(municipio)));
   }
 
-  if (municipio) {
-    puestos = puestos.filter(p => p.municipio.toLowerCase() === String(municipio).toLowerCase());
-  }
+  const puestos = conditions.length
+    ? await db.select().from(puestosVotacion).where(and(...conditions))
+    : await db.select().from(puestosVotacion);
 
   return res.json({ puestos });
 });
