@@ -4,6 +4,7 @@
   "description": "REDTER - Plataforma de gestión territorial y relacionamiento comunitario",
   "main": "dist/server.js",
   "scripts": {
+    "postinstall": "npm install --prefix client",
     "dev:server": "tsx watch src/server.ts",
     "dev:client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
