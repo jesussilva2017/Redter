@@ -11,6 +11,7 @@ export default {
         navy: {
           DEFAULT: '#1D3557',
           deep: '#1E3A8A',
+          light: '#3D6FB4',
         },
         surface: {
           DEFAULT: '#FFFFFF',

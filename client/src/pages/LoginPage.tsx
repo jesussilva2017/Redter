@@ -100,7 +100,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-navy hover:bg-navy-deep text-white font-semibold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full mt-2 py-3 px-4 bg-navy hover:bg-navy-light text-white font-semibold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
               <ArrowRight className="w-4 h-4" />
