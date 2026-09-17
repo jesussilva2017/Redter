@@ -5,6 +5,7 @@ import { and, eq, like, or } from 'drizzle-orm';
 import { db } from '../../db';
 import { users } from '../../db/schema';
 import { authenticate, authorizeRoles, AuthenticatedRequest } from '../../middlewares/auth';
+import { asyncHandler } from '../../middlewares/asyncHandler';
 
 export const usersRouter = Router();
 
@@ -19,7 +20,7 @@ const sanitize = (user: UserRow) => {
 usersRouter.use(authenticate);
 
 // GET /api/v1/users - Listar usuarios según jerarquía/scoping, con buscador y filtro de rol
-usersRouter.get('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER'), async (req: AuthenticatedRequest, res) => {
+usersRouter.get('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const currentUser = req.user!;
   const { role, q } = req.query;
 
@@ -48,10 +49,10 @@ usersRouter.get('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR
   }
 
   return res.json({ users: allUsers.map(sanitize) });
-});
+}));
 
 // POST /api/v1/users - Crear nuevo usuario (Admin/Coordinador)
-usersRouter.post('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
+usersRouter.post('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const {
     nombre,
     email,
@@ -102,19 +103,19 @@ usersRouter.post('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADO
   await db.insert(users).values(newUser);
 
   return res.status(201).json({ message: 'Usuario creado exitosamente', user: sanitize(newUser) });
-});
+}));
 
 // GET /api/v1/users/:id
-usersRouter.get('/:id', async (req: AuthenticatedRequest, res) => {
+usersRouter.get('/:id', asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [user] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!user) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
   }
   return res.json({ user: sanitize(user) });
-});
+}));
 
 // PUT /api/v1/users/:id - Editar usuario existente (recarga en el mismo modal en el cliente)
-usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
+usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -169,10 +170,10 @@ usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINA
   const [updated] = await db.select().from(users).where(eq(users.id, existing.id)).limit(1);
 
   return res.json({ message: 'Usuario actualizado exitosamente', user: sanitize(updated) });
-});
+}));
 
 // PATCH /api/v1/users/:id/activo - Alternar estado activo/inactivo
-usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
+usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -182,10 +183,10 @@ usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 
   const [updated] = await db.select().from(users).where(eq(users.id, existing.id)).limit(1);
 
   return res.json({ message: 'Estado actualizado', user: sanitize(updated) });
-});
+}));
 
 // DELETE /api/v1/users/:id - Eliminar usuario (confirmado previamente en el cliente)
-usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), async (req: AuthenticatedRequest, res) => {
+usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -197,4 +198,4 @@ usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORD
 
   await db.delete(users).where(eq(users.id, existing.id));
   return res.json({ message: 'Usuario eliminado exitosamente' });
-});
+}));

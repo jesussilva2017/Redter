@@ -2,11 +2,12 @@ import { Router } from 'express';
 import { and, eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { puestosVotacion } from '../../db/schema';
+import { asyncHandler } from '../../middlewares/asyncHandler';
 
 export const territoryRouter = Router();
 
 // GET /api/v1/territory/puestos - Puestos de votación en Colombia
-territoryRouter.get('/puestos', async (req, res) => {
+territoryRouter.get('/puestos', asyncHandler(async (req, res) => {
   const { departamento, municipio } = req.query;
 
   const conditions = [];
@@ -22,4 +23,4 @@ territoryRouter.get('/puestos', async (req, res) => {
     : await db.select().from(puestosVotacion);
 
   return res.json({ puestos });
-});
+}));

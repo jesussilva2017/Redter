@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { users } from '../../db/schema';
 import { authenticate, AuthenticatedRequest } from '../../middlewares/auth';
+import { asyncHandler } from '../../middlewares/asyncHandler';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 export const authRouter = Router();
 
 // POST /api/v1/auth/login — usuario: cédula, contraseña: password
-authRouter.post('/login', async (req, res) => {
+authRouter.post('/login', asyncHandler(async (req, res) => {
   const { cedula, password } = req.body;
 
   if (!cedula || !password) {
@@ -57,10 +58,10 @@ authRouter.post('/login', async (req, res) => {
     token,
     user: tokenPayload,
   });
-});
+}));
 
 // GET /api/v1/auth/me
-authRouter.get('/me', authenticate, async (req: AuthenticatedRequest, res) => {
+authRouter.get('/me', authenticate, asyncHandler(async (req: AuthenticatedRequest, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'No autenticado' });
   }
@@ -72,4 +73,4 @@ authRouter.get('/me', authenticate, async (req: AuthenticatedRequest, res) => {
 
   const { passwordHash, ...safeUser } = user;
   return res.json({ user: safeUser });
-});
+}));

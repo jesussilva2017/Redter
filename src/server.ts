@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -73,6 +73,16 @@ app.get('*', (req, res) => {
   });
 });
 
+// Middleware global de errores — captura fallos de rutas async (ej. MySQL
+// caído) y responde con un JSON claro en vez de dejar la petición colgada.
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error no controlado en', req.method, req.path, ':', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ error: 'Error interno del servidor. Intente nuevamente.' });
+});
+
 app.listen(PORT, () => {
-  console.log(`🚀 SIGE Electoral API corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 REDTER API corriendo en http://localhost:${PORT}`);
 });
