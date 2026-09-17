@@ -77,7 +77,25 @@ Proyecto desarrollado bajo DevSoluciones (devsoluciones.com).
 - Despliegue vía GitHub: hPanel conecta el repo, build con `npm run build`
 - Restricción clave: todo debe correr en **un solo proceso Node.js persistente** —
   nada de Redis externo ni funciones serverless de corta duración
-- Estado: subdominio resuelto en Hostinger; **primer despliegue real aún no confirmado**
+- Estado: ✅ **desplegado y en producción** en `https://redter.devsoluciones.com` — Node.js
+  vía el importador de GitHub de hPanel (rama `main`, Node 22.x, `dist/server.js` como
+  archivo de entrada), con MySQL real conectado (`u395420986_redter`). Ver notas de
+  despliegue abajo para los ajustes específicos de Hostinger que hicieron falta.
+
+> 📋 **Notas del despliegue real (para la próxima vez o para otro entorno):**
+> - Hostinger no ofrece un campo de "comando de build" personalizado en su importador;
+>   ejecuta el script `build:server` del `package.json` directamente (no `build`), así
+>   que `build:server` debe compilar **todo** (servidor y cliente), no solo el backend.
+> - `npm install` en Hostinger corre con `NODE_ENV=production`, y npm omite
+>   `devDependencies` en ese modo — por eso `typescript`, `vite` y el resto de
+>   herramientas de compilación viven en `dependencies`, no en `devDependencies`.
+> - El proyecto tiene dos `package.json` (raíz y `client/`); un `postinstall` en la raíz
+>   corre `npm install --prefix client` para que un solo `npm install` deje todo listo.
+> - Las tablas y los datos de demostración se crearon manualmente vía SQL en phpMyAdmin
+>   (no había terminal/SSH disponible) — ver `drizzle/0000_serious_madame_masque.sql`
+>   para el DDL exacto generado por Drizzle.
+> - El dominio final solo respondía correctamente por **HTTPS**; por HTTP mostraba un
+>   error de enrutamiento heredado de la configuración previa del subdominio.
 
 ---
 
@@ -375,7 +393,7 @@ Sin tablas propias — vistas/queries agregadas sobre las tablas anteriores.
 - [x] Login funcional (cédula + contraseña) — *corregido: autentica por cédula y valida la contraseña real con bcrypt (ver sección 4.1)*
 - [x] Dashboard con sidebar — *retematizado con la paleta clara*
 - [x] Datatable de gestión de usuarios (CRUD completo + roles) — *buscador, filtro por rol, editar, eliminar con confirmación y toggle de activo con spinner, todo probado end-to-end*
-- [x] Conexión a base de datos real probada — *auth/usuarios/territorio migrados de memoria a Drizzle/MySQL, probado end-to-end contra MariaDB; falta correr el seed contra la base real de Hostinger al desplegar*
-- [ ] Primer despliegue en Hostinger
+- [x] Conexión a base de datos real probada — *auth/usuarios/territorio en Drizzle/MySQL, corriendo en producción contra `u395420986_redter`*
+- [x] Primer despliegue en Hostinger — *en producción en `https://redter.devsoluciones.com`, login y CRUD de usuarios verificados en vivo*
 
 **Leyenda:** `[x]` hecho · `[~]` parcial o en conflicto con el plan · `[ ]` pendiente
