@@ -1,43 +1,82 @@
 import React, { useState } from 'react';
-import { Vote, Lock, IdCard, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Vote, Lock, IdCard, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const DEMO_ACCOUNTS = [
-  { cedula: '1018234567', label: '👑 Admin Campaña' },
-  { cedula: '52890123', label: '🗺️ Coordinador Zonal' },
-  { cedula: '79876543', label: '🙋‍♂️ Líder Electoral' },
-  { cedula: '1020304050', label: '📋 Testigo de Mesa' },
-];
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const [cedula, setCedula] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [touched, setTouched] = useState<{ cedula?: boolean; password?: boolean }>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const validateCedula = (val: string): string => {
+    if (!val || val.trim() === '') {
+      return 'Por favor ingresa tu número de cédula.';
+    }
+    if (!/^\d+$/.test(val)) {
+      return 'La cédula solo debe contener números.';
+    }
+    if (val.length < 10) {
+      return `La cédula debe tener 10 números (faltan ${10 - val.length}).`;
+    }
+    if (val.length > 10) {
+      return 'La cédula no puede superar los 10 dígitos.';
+    }
+    return '';
+  };
+
+  const validatePassword = (val: string): string => {
+    if (!val || val.trim() === '') {
+      return 'Por favor ingresa tu contraseña.';
+    }
+    if (val.length < 4) {
+      return 'La contraseña debe tener al menos 4 caracteres.';
+    }
+    return '';
+  };
+
+  const cedulaError = (touched.cedula || submitted) ? validateCedula(cedula) : '';
+  const passwordError = (touched.password || submitted) ? validatePassword(password) : '';
+  const isCedulaValid = cedula.length === 10 && /^\d+$/.test(cedula);
+
+  const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Solo permitir dígitos y máximo 10 caracteres
+    const rawVal = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setCedula(rawVal);
+    if (serverError) setServerError('');
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (serverError) setServerError('');
+  };
+
+  const handleBlur = (field: 'cedula' | 'password') => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setSubmitted(true);
+    setServerError('');
+
+    const cErr = validateCedula(cedula);
+    const pErr = validatePassword(password);
+
+    if (cErr || pErr) {
+      return;
+    }
+
     setLoading(true);
     try {
       await login(cedula, password);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error de conexión. Intente nuevamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (demoCedula: string) => {
-    setCedula(demoCedula);
-    setPassword('redter123');
-    setError('');
-    setLoading(true);
-    try {
-      await login(demoCedula, 'redter123');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Error con usuario de prueba');
+      setServerError(
+        err.response?.data?.error || 'Credenciales no válidas o error de conexión. Verifique sus datos.'
+      );
     } finally {
       setLoading(false);
     }
@@ -56,75 +95,150 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Login Form Card */}
-        <div className="bg-white p-8 rounded-2xl shadow-lg border border-line">
+        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-line">
           <h2 className="text-lg font-semibold text-navy mb-6">Iniciar Sesión</h2>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
-              {error}
+          {/* Alerta de error de servidor / credenciales */}
+          {serverError && (
+            <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2.5 shadow-sm transition-all animate-in fade-in">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 leading-relaxed">{serverError}</div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            {/* Campo Cédula */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Cédula</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label
+                  htmlFor="cedula"
+                  className={`block text-xs font-medium transition-colors ${
+                    cedulaError ? 'text-red-600' : 'text-gray-700'
+                  }`}
+                >
+                  Cédula
+                </label>
+                <span
+                  className={`text-[11px] font-medium transition-colors ${
+                    isCedulaValid
+                      ? 'text-emerald-600'
+                      : cedula.length > 0
+                      ? 'text-amber-600'
+                      : 'text-gray-400'
+                  }`}
+                >
+                  {cedula.length}/10 dígitos
+                </span>
+              </div>
+
               <div className="relative">
-                <IdCard className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                <IdCard
+                  className={`w-4 h-4 absolute left-3 top-3 transition-colors ${
+                    cedulaError ? 'text-red-400' : isCedulaValid ? 'text-emerald-500' : 'text-gray-400'
+                  }`}
+                />
                 <input
+                  id="cedula"
                   type="text"
                   inputMode="numeric"
-                  required
+                  autoComplete="username"
                   value={cedula}
-                  onChange={(e) => setCedula(e.target.value)}
-                  placeholder="1018234567"
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
+                  onChange={handleCedulaChange}
+                  onBlur={() => handleBlur('cedula')}
+                  placeholder="Ej: 1018234567"
+                  className={`w-full pl-9 pr-9 py-2.5 bg-white border rounded-xl text-sm transition-all focus:outline-none ${
+                    cedulaError
+                      ? 'border-red-500 bg-red-50/20 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                      : isCedulaValid
+                      ? 'border-emerald-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 text-gray-800'
+                      : 'border-line-strong text-gray-800 placeholder-gray-400 focus:border-navy focus:ring-2 focus:ring-navy/10'
+                  }`}
                 />
+                {isCedulaValid && !cedulaError && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-3 top-3 pointer-events-none" />
+                )}
               </div>
+
+              {/* Mensaje de alerta para cédula */}
+              {cedulaError && (
+                <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1.5 font-medium transition-all animate-in fade-in">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{cedulaError}</span>
+                </p>
+              )}
             </div>
 
+            {/* Campo Contraseña */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Contraseña</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
-                />
+              <div className="flex justify-between items-center mb-1.5">
+                <label
+                  htmlFor="password"
+                  className={`block text-xs font-medium transition-colors ${
+                    passwordError ? 'text-red-600' : 'text-gray-700'
+                  }`}
+                >
+                  Contraseña
+                </label>
               </div>
+
+              <div className="relative">
+                <Lock
+                  className={`w-4 h-4 absolute left-3 top-3 transition-colors ${
+                    passwordError ? 'text-red-400' : 'text-gray-400'
+                  }`}
+                />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                  onBlur={() => handleBlur('password')}
+                  placeholder="••••••••"
+                  className={`w-full pl-9 pr-10 py-2.5 bg-white border rounded-xl text-sm transition-all focus:outline-none ${
+                    passwordError
+                      ? 'border-red-500 bg-red-50/20 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                      : 'border-line-strong text-gray-800 placeholder-gray-400 focus:border-navy focus:ring-2 focus:ring-navy/10'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {/* Mensaje de alerta para contraseña */}
+              {passwordError && (
+                <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1.5 font-medium transition-all animate-in fade-in">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{passwordError}</span>
+                </p>
+              )}
             </div>
 
+            {/* Botón Ingresar */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-navy hover:bg-navy-light text-white font-semibold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full mt-3 py-3 px-4 bg-navy hover:bg-navy-light active:scale-[0.99] text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
             >
-              {loading ? 'Ingresando...' : 'Ingresar'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Validando credenciales...</span>
+                </>
+              ) : (
+                <>
+                  <span>Ingresar</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
-
-          {/* Quick Demo Access Roles */}
-          <div className="mt-8 pt-6 border-t border-line">
-            <p className="text-xs text-gray-500 font-medium mb-3 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-navy" /> Ingreso rápido por rol (demostración):
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {DEMO_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.cedula}
-                  type="button"
-                  onClick={() => handleDemoLogin(acc.cedula)}
-                  className="p-2.5 bg-surface-subtle hover:bg-line border border-line rounded-lg text-gray-700 text-left font-medium transition"
-                >
-                  {acc.label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
