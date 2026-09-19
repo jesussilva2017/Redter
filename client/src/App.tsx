@@ -54,7 +54,7 @@ const MainLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Navbar */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-line sticky top-0 z-30 px-4 md:px-6 py-3.5 flex items-center justify-between gap-4">
+        <header className="bg-white/90 backdrop-blur-md border-b border-line sticky top-0 z-30 px-4 sm:px-6 md:px-8 py-3.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -78,7 +78,7 @@ const MainLayout: React.FC = () => {
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="p-6 md:p-8 flex-1 max-w-7xl w-full mx-auto">
+        <main className="p-4 sm:p-6 md:p-8 flex-1 w-full max-w-[1920px] mx-auto">
           {renderTabContent()}
         </main>
       </div>

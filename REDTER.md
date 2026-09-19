@@ -220,15 +220,25 @@ pantalla (móvil, tablet, escritorio).
 - permisos (por módulo)
 
 ### 6.2 Votantes y segmentación
-**votantes**
+**votantes (voters)**
 - id (PK)
-- nombre_completo
-- cedula (único, cifrado en reposo)
-- telefono (cifrado en reposo)
-- direccion
-- territorio_id (FK → territorios)
-- lider_id (FK → users, nullable)
-- created_at, updated_at
+- tipo_documento (TI | CC | CE | PP | PEP)
+- cedula / numero_documento (único)
+- nombres, apellidos
+- telefono, whatsapp, email
+- fecha_nacimiento, ciudad_nacimiento
+- genero, zona (Urbana | Rural)
+- direccion, barrio_vereda
+- nivel_educativo (Sin estudios .. Doctorado)
+- ocupacion_actual (Empleado .. Pensionado)
+- profesion_oficio, empresa_lugar_trabajo
+- departamento, municipio, zona_electoral
+- puesto_votacion_id (FK → puestos_votacion), mesa
+- leader_id (FK → users)
+- nivel_fidelizacion (SEGURO | SIMPATIZANTE | INDECISO | OPOSITOR)
+- requiere_transporte, voto_asistido
+- voto_confirmado_dia_d, hora_voto_dia_d
+- observaciones, created_at
 
 **segmentos**
 - id (PK)

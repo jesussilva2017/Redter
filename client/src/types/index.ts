@@ -16,18 +16,32 @@ export interface User {
   createdAt: string;
 }
 
+export type EstadoSeguimiento = 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADO' | 'VENCIDO' | 'CANCELADO';
+export type TipoSeguimiento = 'Llamada' | 'WhatsApp' | 'Visita' | 'Reunión' | 'Evento' | 'Correo';
+
 export interface Voter {
   id: string;
+  tipoDocumento?: string;
   cedula: string;
   nombres: string;
   apellidos: string;
   telefono: string;
   whatsapp: string;
   email: string;
+  fechaNacimiento?: string;
+  departamentoNacimiento?: string;
+  ciudadNacimiento?: string;
+  genero?: string;
+  zona?: string;
   direccion: string;
   barrioVereda: string;
+  nivelEducativo?: string;
+  ocupacionActual?: string;
+  profesionOficio?: string;
+  empresaLugarTrabajo?: string;
   departamento: string;
   municipio: string;
+  zonaElectoral?: string;
   puestoVotacionId: string;
   mesa: number;
   leaderId: string;
@@ -37,6 +51,23 @@ export interface Voter {
   observaciones: string;
   votoConfirmadoDiaD: boolean;
   horaVotoDiaD?: string | null;
+  // Seguimiento
+  estadoSeguimiento?: EstadoSeguimiento;
+  fechaSeguimiento?: string | null;
+  tipoSeguimiento?: TipoSeguimiento | string;
+  usuarioResponsableId?: string | null;
+  observacionesSeguimiento?: string | null;
+  createdAt: string;
+}
+
+export interface VoterSeguimiento {
+  id: string;
+  voterId: string;
+  usuarioResponsableId: string;
+  tipoSeguimiento: TipoSeguimiento | string;
+  estado: EstadoSeguimiento;
+  fechaSeguimiento?: string | null;
+  observaciones?: string | null;
   createdAt: string;
 }
 
@@ -48,6 +79,35 @@ export interface Puesto {
   nombrePuesto: string;
   direccion: string;
   mesasTotales: number;
+  numeroPuesto?: number;
+  institucion?: string;
+  barrioVereda?: string;
+  idZona?: number;
+  municipioId?: number;
+  latitud?: string | number;
+  longitud?: string | number;
+  telefono?: string;
+  responsable?: string;
+  totalMesas?: number;
+  capacidadVotantes?: number;
+}
+
+export interface ZonaVotacion {
+  id: number;
+  numero: number;
+  nombre: string;
+  descripcion?: string;
+  tipo?: 'urbana' | 'rural' | 'especial';
+}
+
+export interface MesaVotacion {
+  id: number;
+  numero: number;
+  puestoId: string;
+  zonaId: number;
+  codigo: string;
+  numeroPadron?: number;
+  capacidadElectores?: number;
 }
 
 export interface CampaignEvent {

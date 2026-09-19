@@ -7,16 +7,27 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface MockVoter {
   id: string;
+  tipoDocumento?: string;
   cedula: string;
   nombres: string;
   apellidos: string;
   telefono: string;
   whatsapp: string;
   email: string;
+  fechaNacimiento?: string;
+  departamentoNacimiento?: string;
+  ciudadNacimiento?: string;
+  genero?: string;
+  zona?: string;
   direccion: string;
   barrioVereda: string;
+  nivelEducativo?: string;
+  ocupacionActual?: string;
+  profesionOficio?: string;
+  empresaLugarTrabajo?: string;
   departamento: string;
   municipio: string;
+  zonaElectoral?: string;
   puestoVotacionId: string;
   mesa: number;
   leaderId: string;
@@ -26,6 +37,11 @@ export interface MockVoter {
   observaciones: string;
   votoConfirmadoDiaD: boolean;
   horaVotoDiaD?: string | null;
+  estadoSeguimiento?: 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADO' | 'VENCIDO' | 'CANCELADO';
+  fechaSeguimiento?: string | null;
+  tipoSeguimiento?: string;
+  usuarioResponsableId?: string | null;
+  observacionesSeguimiento?: string | null;
   createdAt: string;
 }
 
@@ -63,97 +79,8 @@ export interface MockTask {
   createdAt: string;
 }
 
-// Data Inicial de Prueba (Colombia) — referencia IDs de usuarios/puestos sembrados en la BD real
-export const initialVoters: MockVoter[] = [
-  {
-    id: 'voter-1',
-    cedula: '1019001122',
-    nombres: 'Jorge Mario',
-    apellidos: 'Valencia Morales',
-    telefono: '3015556677',
-    whatsapp: '3015556677',
-    email: 'jorge.valencia@gmail.com',
-    direccion: 'Calle 165 # 8-30',
-    barrioVereda: 'Usaquén Centro',
-    departamento: 'Cundinamarca',
-    municipio: 'Bogotá D.C.',
-    puestoVotacionId: 'puesto-1',
-    mesa: 1,
-    leaderId: 'user-lider-usaquen',
-    nivelFidelizacion: 'SEGURO',
-    requiereTransporte: true,
-    votoAsistido: false,
-    observaciones: 'Líder comunitaria del conjunto residencial. Apoya con 10 familiares.',
-    votoConfirmadoDiaD: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'voter-2',
-    cedula: '52444333',
-    nombres: 'María Camila',
-    apellidos: 'Torres Benítez',
-    telefono: '3124445566',
-    whatsapp: '3124445566',
-    email: 'camila.torres@outlook.com',
-    direccion: 'Cra 15 # 170-45',
-    barrioVereda: 'Santa Bárbara',
-    departamento: 'Cundinamarca',
-    municipio: 'Bogotá D.C.',
-    puestoVotacionId: 'puesto-1',
-    mesa: 2,
-    leaderId: 'user-lider-usaquen',
-    nivelFidelizacion: 'SIMPATIZANTE',
-    requiereTransporte: false,
-    votoAsistido: false,
-    observaciones: 'Interesada en propuestas de seguridad y emprendimiento.',
-    votoConfirmadoDiaD: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'voter-3',
-    cedula: '80123987',
-    nombres: 'Hernán Darío',
-    apellidos: 'Gómez Jaramillo',
-    telefono: '3168889900',
-    whatsapp: '3168889900',
-    email: 'hernan.gomez@empresa.co',
-    direccion: 'Calle 70 # 9-20',
-    barrioVereda: 'Chapinero Alto',
-    departamento: 'Cundinamarca',
-    municipio: 'Bogotá D.C.',
-    puestoVotacionId: 'puesto-2',
-    mesa: 5,
-    leaderId: 'user-coord-bogota',
-    nivelFidelizacion: 'INDECISO',
-    requiereTransporte: true,
-    votoAsistido: true,
-    observaciones: 'Adulto mayor. Requiere vehículo adaptado el Día D.',
-    votoConfirmadoDiaD: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'voter-4',
-    cedula: '1032998877',
-    nombres: 'Luisa Fernanda',
-    apellidos: 'Rodríguez Silva',
-    telefono: '3042223344',
-    whatsapp: '3042223344',
-    email: 'luisa.rodriguez@gmail.com',
-    direccion: 'Cra 43A # 5-10',
-    barrioVereda: 'El Poblado',
-    departamento: 'Antioquia',
-    municipio: 'Medellín',
-    puestoVotacionId: 'puesto-3',
-    mesa: 12,
-    leaderId: 'user-admin',
-    nivelFidelizacion: 'SEGURO',
-    requiereTransporte: false,
-    votoAsistido: false,
-    observaciones: 'Coordinadora de movimiento juvenil Medellín.',
-    votoConfirmadoDiaD: false,
-    createdAt: new Date().toISOString(),
-  }
-];
+// Data de votantes sincronizada directamente desde la base de datos MySQL (voters)
+export const initialVoters: MockVoter[] = [];
 
 export const initialEvents: MockEvent[] = [
   {
@@ -242,6 +169,13 @@ class MemoryStore {
     };
     this.voters.push(newVoter);
     return newVoter;
+  }
+
+  updateVoter(id: string, updates: Partial<MockVoter>) {
+    const idx = this.voters.findIndex(v => v.id === id);
+    if (idx === -1) return null;
+    this.voters[idx] = { ...this.voters[idx], ...updates };
+    return this.voters[idx];
   }
 
   addEvent(event: Omit<MockEvent, 'id' | 'createdAt' | 'asistenciaReal'>) {
