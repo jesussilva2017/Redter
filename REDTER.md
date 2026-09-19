@@ -110,12 +110,11 @@ Proyecto desarrollado bajo DevSoluciones (devsoluciones.com).
 Todo el login y el dashboard deben ser **responsive**, adaptables a cualquier tipo de
 pantalla (móvil, tablet, escritorio).
 
-> ✅ **Implementado:** `client/tailwind.config.js` ahora define los tokens `navy`,
-> `surface` y `line` con estos mismos valores hex, y las pantallas de login, dashboard
-> (sidebar, header, tarjetas) y gestión de usuarios ya usan el tema claro
-> blanco/marino en vez del tema oscuro anterior. Las pantallas de Votantes y Agenda
-> (fuera del alcance de la primera entrega) siguen con el tema oscuro original —
-> pendiente de re-tematizar cuando esos módulos entren en desarrollo.
+> ✅ **Implementado:** `client/tailwind.config.js` define los tokens `navy`,
+> `surface` y `line` con estos valores hex. Todas las pantallas principales: Login,
+> Dashboard, Usuarios y Roles, Votantes y CRM, y Agenda y Eventos ya usan de forma consistente
+> el tema claro blanco/marino con botones principales en azul marino (`bg-navy`), bordes suaves (`border-line`)
+> y fondos limpios (`bg-white` / `bg-surface-subtle`).
 
 ---
 
