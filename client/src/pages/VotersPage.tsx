@@ -724,8 +724,8 @@ export const VotersPage: React.FC = () => {
       </div>
 
       {/* Buscador y filtros */}
-      <div className="flex flex-col gap-2 sm:gap-3">
-        <div className="relative">
+      <div className="flex flex-col lg:flex-row gap-2.5 sm:gap-3 items-stretch lg:items-center w-full">
+        <div className="relative flex-1 min-w-0 w-full">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -736,11 +736,11 @@ export const VotersPage: React.FC = () => {
           />
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+        <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-2.5 w-full lg:w-auto shrink-0">
           <select
             value={nivelFilter}
             onChange={(e) => setNivelFilter(e.target.value)}
-            className="px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-700 sm:min-w-[170px] focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
+            className="w-full lg:w-auto lg:min-w-[170px] px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition truncate"
           >
             <option value="">Intenciones</option>
             <option value="SEGURO">🟢 Voto Seguro</option>
@@ -752,7 +752,7 @@ export const VotersPage: React.FC = () => {
           <select
             value={seguimientoFilter}
             onChange={(e) => setSeguimientoFilter(e.target.value)}
-            className="px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-700 sm:min-w-[180px] focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
+            className="w-full lg:w-auto lg:min-w-[175px] px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition truncate"
           >
             <option value="">Seguimientos</option>
             <option value="PENDIENTE">🟡 Pendientes</option>
@@ -1341,7 +1341,7 @@ export const VotersPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                    <div className="min-w-0">
                       <label className={`block font-semibold mb-1 transition-colors ${step1Errors.fechaNacimiento ? 'text-red-600' : 'text-gray-700'}`}>
                         Fecha de nacimiento *
                       </label>
@@ -1352,7 +1352,7 @@ export const VotersPage: React.FC = () => {
                           setNewVoter({ ...newVoter, fechaNacimiento: e.target.value });
                           if (stepError) setStepError('');
                         }}
-                        className={`w-full bg-white border rounded-xl px-3 py-2 text-xs sm:text-sm transition focus:outline-none ${
+                        className={`w-full max-w-full min-w-0 box-border bg-white border rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm transition focus:outline-none ${
                           step1Errors.fechaNacimiento
                             ? 'border-red-500 bg-red-50/20 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500'
                             : 'border-line-strong text-gray-800 focus:border-navy focus:ring-1 focus:ring-navy'
@@ -1366,7 +1366,7 @@ export const VotersPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <label className={`block font-semibold mb-1 transition-colors ${step1Errors.genero ? 'text-red-600' : 'text-gray-700'}`}>
                         Género *
                       </label>
@@ -1376,7 +1376,7 @@ export const VotersPage: React.FC = () => {
                           setNewVoter({ ...newVoter, genero: e.target.value });
                           if (stepError) setStepError('');
                         }}
-                        className={`w-full bg-white border rounded-xl px-3 py-2 text-xs sm:text-sm transition focus:outline-none ${
+                        className={`w-full max-w-full min-w-0 box-border bg-white border rounded-xl px-3 py-2 text-xs sm:text-sm transition focus:outline-none ${
                           step1Errors.genero
                             ? 'border-red-500 bg-red-50/20 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500'
                             : 'border-line-strong text-gray-800 focus:border-navy focus:ring-1 focus:ring-navy'
