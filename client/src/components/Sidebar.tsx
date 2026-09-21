@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'TESTIGO', 'VOLUNTARIO'] },
     { id: 'voters', label: 'Ciudadanos', icon: UserCheck, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'TESTIGO'] },
-    { id: 'users', label: 'Usuarios y Roles', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER'] },
+    { id: 'users', label: 'Usuarios y Roles', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA'] },
     { id: 'events', label: 'Agenda y Eventos', icon: CalendarDays, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'VOLUNTARIO', 'TESTIGO'] },
   ];
 

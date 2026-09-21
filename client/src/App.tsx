@@ -33,7 +33,10 @@ const MainLayout: React.FC = () => {
       case 'voters':
         return <VotersPage />;
       case 'users':
-        return <UsersPage />;
+        if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN_CAMPANA') {
+          return <UsersPage />;
+        }
+        return <DashboardPage />;
       case 'events':
         return <EventsPage />;
       default:

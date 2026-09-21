@@ -51,8 +51,8 @@ usersRouter.get('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR
   return res.json({ users: allUsers.map(sanitize) });
 }));
 
-// POST /api/v1/users - Crear nuevo usuario (Admin/Coordinador)
-usersRouter.post('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
+// POST /api/v1/users - Crear nuevo usuario (Solo Super Admin y Admin Campaña)
+usersRouter.post('/', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const {
     nombre,
     email,
@@ -114,8 +114,8 @@ usersRouter.get('/:id', asyncHandler(async (req: AuthenticatedRequest, res) => {
   return res.json({ user: sanitize(user) });
 }));
 
-// PUT /api/v1/users/:id - Editar usuario existente (recarga en el mismo modal en el cliente)
-usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
+// PUT /api/v1/users/:id - Editar usuario existente (Solo Super Admin y Admin Campaña)
+usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -172,8 +172,8 @@ usersRouter.put('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINA
   return res.json({ message: 'Usuario actualizado exitosamente', user: sanitize(updated) });
 }));
 
-// PATCH /api/v1/users/:id/activo - Alternar estado activo/inactivo
-usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
+// PATCH /api/v1/users/:id/activo - Alternar estado activo/inactivo (Solo Super Admin y Admin Campaña)
+usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -185,8 +185,8 @@ usersRouter.patch('/:id/activo', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 
   return res.json({ message: 'Estado actualizado', user: sanitize(updated) });
 }));
 
-// DELETE /api/v1/users/:id - Eliminar usuario (confirmado previamente en el cliente)
-usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR'), asyncHandler(async (req: AuthenticatedRequest, res) => {
+// DELETE /api/v1/users/:id - Eliminar usuario (Solo Super Admin y Admin Campaña)
+usersRouter.delete('/:id', authorizeRoles('SUPER_ADMIN', 'ADMIN_CAMPANA'), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const [existing] = await db.select().from(users).where(eq(users.id, req.params.id)).limit(1);
   if (!existing) {
     return res.status(404).json({ error: 'Usuario no encontrado' });
