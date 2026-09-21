@@ -704,29 +704,29 @@ export const VotersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-heading font-bold text-2xl text-gray-800 flex items-center gap-2">
-            <UserCheck className="w-6 h-6 text-navy" /> CRM Votantes & Segmentación
+          <h1 className="font-heading font-bold text-xl sm:text-2xl text-gray-800 flex items-center gap-2">
+            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-navy" /> CRM Votantes & Segmentación
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
             Gestión 360° de simpatizantes, asignación por puestos de votación e intención de voto.
           </p>
         </div>
         <button
           onClick={openModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-navy hover:bg-navy-deep text-white font-semibold text-sm rounded-xl shadow-md transition"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-navy hover:bg-navy-deep active:bg-navy-deep text-white font-semibold text-sm rounded-xl shadow-md transition w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" /> Registrar Nuevo Votante
         </button>
       </div>
 
       {/* Buscador y filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+      <div className="flex flex-col gap-2 sm:gap-3">
+        <div className="relative">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Buscar por cédula, nombre, teléfono, profesión..."
@@ -736,13 +736,13 @@ export const VotersPage: React.FC = () => {
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <select
             value={nivelFilter}
             onChange={(e) => setNivelFilter(e.target.value)}
-            className="px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-700 min-w-[170px] focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
+            className="px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-700 sm:min-w-[170px] focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
           >
-            <option value="">Todas las intenciones</option>
+            <option value="">Intenciones</option>
             <option value="SEGURO">🟢 Voto Seguro</option>
             <option value="SIMPATIZANTE">🔵 Simpatizante</option>
             <option value="INDECISO">🟡 Indeciso</option>
@@ -752,9 +752,9 @@ export const VotersPage: React.FC = () => {
           <select
             value={seguimientoFilter}
             onChange={(e) => setSeguimientoFilter(e.target.value)}
-            className="px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-700 min-w-[180px] focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
+            className="px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-sm text-gray-700 sm:min-w-[180px] focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
           >
-            <option value="">Todos los seguimientos</option>
+            <option value="">Seguimientos</option>
             <option value="PENDIENTE">🟡 Pendientes</option>
             <option value="EN_PROCESO">🔵 En proceso</option>
             <option value="COMPLETADO">🟢 Completados</option>
@@ -767,7 +767,7 @@ export const VotersPage: React.FC = () => {
       {/* Voters Table */}
       <div className="bg-white rounded-2xl border border-line overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-600">
+          <table className="w-full text-left text-xs text-gray-600 mobile-card-table">
             <thead className="bg-surface-subtle text-gray-500 uppercase tracking-wider font-semibold border-b border-line">
               <tr>
                 <th className="py-4 px-5 w-[20%] min-w-[220px]">Votante / Documento</th>
@@ -798,7 +798,7 @@ export const VotersPage: React.FC = () => {
                   return (
                     <tr key={voter.id} className="hover:bg-surface-subtle/80 transition group">
                       {/* Votante / Documento */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5" data-label="">
                         <div className="font-semibold text-gray-800 text-sm flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-full bg-navy/10 text-navy font-bold flex items-center justify-center text-xs shrink-0 ring-2 ring-navy/5">
                             {voter.nombres.charAt(0)}
@@ -813,7 +813,7 @@ export const VotersPage: React.FC = () => {
                       </td>
 
                       {/* Profesión u Oficio */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5" data-label="Profesión">
                         <div className="font-medium text-gray-800 text-xs flex items-center gap-1.5">
                           <Briefcase className="w-3.5 h-3.5 text-navy shrink-0" />
                           <span className="font-semibold text-gray-800 text-xs" title={voter.profesionOficio || voter.ocupacionActual || 'Sin profesión registrada'}>
@@ -828,7 +828,7 @@ export const VotersPage: React.FC = () => {
                       </td>
 
                       {/* Cumpleaños */}
-                      <td className="py-4 px-5 whitespace-nowrap">
+                      <td className="py-4 px-5 whitespace-nowrap" data-label="Cumpleaños">
                         {(() => {
                           const info = getCumpleanosInfo(voter.fechaNacimiento);
                           if (!info) {
@@ -864,7 +864,7 @@ export const VotersPage: React.FC = () => {
                       </td>
 
                       {/* Ubicación: Dirección primero, abajo el barrio o vereda, sin ciudad */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5" data-label="Ubicación">
                         <div className="text-gray-800 font-medium flex items-center gap-1.5 text-xs">
                           <MapPin className="w-3.5 h-3.5 text-navy shrink-0" />
                           <span className="font-medium text-gray-800" title={voter.direccion || 'Sin dirección'}>
@@ -883,7 +883,7 @@ export const VotersPage: React.FC = () => {
                       </td>
 
                       {/* Contacto: Número de teléfono y botón de WhatsApp */}
-                      <td className="py-4 px-5 whitespace-nowrap">
+                      <td className="py-4 px-5 whitespace-nowrap" data-label="Contacto">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-gray-800 text-xs tracking-tight">
                             {voter.telefono || voter.whatsapp || <span className="text-gray-400 font-normal italic">Sin número</span>}
@@ -905,12 +905,12 @@ export const VotersPage: React.FC = () => {
                       </td>
 
                       {/* Fidelización */}
-                      <td className="py-4 px-5 whitespace-nowrap">
+                      <td className="py-4 px-5 whitespace-nowrap" data-label="Fidelización">
                         {getFidelizacionBadge(voter.nivelFidelizacion)}
                       </td>
 
                       {/* Seguimiento: Botón de estado interactivo */}
-                      <td className="py-4 px-5 whitespace-nowrap">
+                      <td className="py-4 px-5 whitespace-nowrap" data-label="Seguimiento">
                         <button
                           type="button"
                           onClick={() => openSeguimientoModal(voter)}
@@ -922,11 +922,11 @@ export const VotersPage: React.FC = () => {
                       </td>
 
                       {/* Acción: Botón Ver que carga la modal con datos del votante */}
-                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                      <td className="py-4 px-5 text-right whitespace-nowrap" data-label="">
                         <button
                           type="button"
                           onClick={() => openEditVoterModal(voter)}
-                          className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-navy hover:text-white text-gray-700 text-xs font-semibold border border-slate-200 hover:border-navy transition inline-flex items-center gap-1.5 shadow-2xs group"
+                          className="px-3.5 py-2 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-navy hover:text-white active:bg-navy-deep text-gray-700 text-xs font-semibold border border-slate-200 hover:border-navy transition inline-flex items-center gap-1.5 shadow-2xs group w-full sm:w-auto justify-center"
                           title="Ver información del votante"
                         >
                           <Eye className="w-3.5 h-3.5 text-gray-500 group-hover:text-white transition" />
@@ -943,17 +943,16 @@ export const VotersPage: React.FC = () => {
       </div>
 
       {/* Paginación y Selector de Tamaño de Registros */}
-      <div className="bg-white border border-line rounded-2xl p-4 mt-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600 shadow-sm">
+      <div className="bg-white border border-line rounded-2xl p-3 sm:p-4 mt-2 sm:mt-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600 shadow-sm">
         {/* Información y Selector de registros (10, 50, 100, 1000) */}
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-          <span className="text-gray-500 font-medium">
-            Mostrando <span className="font-semibold text-gray-800">{startRecord}</span> a{' '}
-            <span className="font-semibold text-gray-800">{endRecord}</span> de{' '}
-            <span className="font-semibold text-gray-800">{totalRecords}</span> registros
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+          <span className="text-gray-500 font-medium text-[11px] sm:text-xs">
+            <span className="font-semibold text-gray-800">{startRecord}</span>-<span className="font-semibold text-gray-800">{endRecord}</span> de{' '}
+            <span className="font-semibold text-gray-800">{totalRecords}</span>
           </span>
 
-          <div className="flex items-center gap-1.5 pl-0 sm:pl-3 sm:border-l sm:border-line">
-            <span className="text-gray-500 text-[11px]">Mostrar:</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 pl-0 sm:pl-3 sm:border-l sm:border-line">
+            <span className="text-gray-500 text-[10px] sm:text-[11px] hidden sm:inline">Mostrar:</span>
             {[10, 50, 100, 1000].map((size) => (
               <button
                 key={size}
@@ -962,7 +961,7 @@ export const VotersPage: React.FC = () => {
                   setPageSize(size);
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition ${
                   pageSize === size
                     ? 'bg-navy text-white shadow-2xs'
                     : 'bg-surface-subtle hover:bg-gray-200 text-gray-700'
@@ -975,21 +974,21 @@ export const VotersPage: React.FC = () => {
         </div>
 
         {/* Controles de Navegación */}
-        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:justify-end">
+        <div className="flex items-center gap-1 sm:gap-1.5 w-full sm:w-auto justify-center sm:justify-end">
           <button
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={validCurrentPage <= 1}
-            className="px-3 py-1.5 rounded-xl border border-line bg-white hover:bg-surface-subtle text-gray-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition shadow-2xs"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-line bg-white hover:bg-surface-subtle active:bg-gray-100 text-gray-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition shadow-2xs"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Anterior</span>
+            <span className="hidden sm:inline">Anterior</span>
           </button>
 
-          <div className="flex items-center gap-1 px-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 px-0.5 sm:px-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter((page) => {
-                if (totalPages <= 7) return true;
+                if (totalPages <= 5) return true;
                 if (page === 1 || page === totalPages) return true;
                 return Math.abs(page - validCurrentPage) <= 1;
               })
@@ -998,11 +997,11 @@ export const VotersPage: React.FC = () => {
                 const showEllipsis = prevPage && page - prevPage > 1;
                 return (
                   <React.Fragment key={page}>
-                    {showEllipsis && <span className="px-1 text-gray-400 text-xs">...</span>}
+                    {showEllipsis && <span className="px-0.5 sm:px-1 text-gray-400 text-xs">...</span>}
                     <button
                       type="button"
                       onClick={() => setCurrentPage(page)}
-                      className={`w-7 h-7 rounded-xl font-semibold text-xs transition flex items-center justify-center ${
+                      className={`w-7 h-7 sm:w-7 sm:h-7 rounded-xl font-semibold text-xs transition flex items-center justify-center ${
                         validCurrentPage === page
                           ? 'bg-navy text-white shadow-2xs'
                           : 'bg-white hover:bg-surface-subtle text-gray-700 border border-line'
@@ -1019,9 +1018,9 @@ export const VotersPage: React.FC = () => {
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={validCurrentPage >= totalPages}
-            className="px-3 py-1.5 rounded-xl border border-line bg-white hover:bg-surface-subtle text-gray-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition shadow-2xs"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-line bg-white hover:bg-surface-subtle active:bg-gray-100 text-gray-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition shadow-2xs"
           >
-            <span>Siguiente</span>
+            <span className="hidden sm:inline">Siguiente</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -1029,39 +1028,39 @@ export const VotersPage: React.FC = () => {
 
       {/* Modal Registrar Votante con Stepper de 3 Pasos (Ampliado y Responsive) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-          <div className="bg-white border border-line rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-0 sm:p-5 overflow-y-auto">
+          <div className="bg-white border-0 sm:border border-line rounded-none sm:rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col min-h-screen sm:min-h-0 sm:max-h-[92vh] overflow-hidden">
             
             {/* Header Modal */}
-            <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-white shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-navy/10 text-navy flex items-center justify-center font-bold">
-                  {editingVoterId ? <Pencil className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-line flex items-center justify-between bg-white shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-navy/10 text-navy flex items-center justify-center font-bold shrink-0">
+                  {editingVoterId ? <Pencil className="w-4 h-4 sm:w-5 sm:h-5" /> : <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </div>
-                <div>
-                  <h3 className="font-heading text-lg font-bold text-gray-800">
+                <div className="min-w-0">
+                  <h3 className="font-heading text-base sm:text-lg font-bold text-gray-800 truncate">
                     {editingVoterId
-                      ? `Editar Votante: ${newVoter.nombres} ${newVoter.apellidos}`
-                      : 'Registro 360° de Votante'}
+                      ? `Editar: ${newVoter.nombres} ${newVoter.apellidos}`
+                      : 'Registro 360°'}
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] sm:text-xs text-gray-500 truncate">
                     {editingVoterId
-                      ? 'Actualice los datos personales, ocupación o ubicación electoral del votante'
-                      : 'Organización comunitaria, datos personales, ocupación y asignación electoral'}
+                      ? 'Actualice datos personales, ocupación o ubicación electoral'
+                      : 'Datos personales, ocupación y asignación electoral'}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={closeModal}
-                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-surface-subtle transition"
+                className="p-2 sm:p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-surface-subtle active:bg-gray-200 transition shrink-0 -mr-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Stepper / Indicador de Pasos */}
-            <div className="px-4 sm:px-8 py-3.5 bg-surface-subtle border-b border-line shrink-0">
+            <div className="px-3 sm:px-8 py-3 sm:py-3.5 bg-surface-subtle border-b border-line shrink-0">
               <div className="flex items-center justify-between max-w-2xl mx-auto">
                 {/* Paso 1 */}
                 <button
@@ -1148,14 +1147,14 @@ export const VotersPage: React.FC = () => {
 
             {/* Error Message */}
             {stepError && (
-              <div className="mx-6 mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-center gap-2">
+              <div className="mx-3 sm:mx-6 mt-3 sm:mt-4 p-2.5 sm:p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
                 <span>{stepError}</span>
               </div>
             )}
 
             {/* Form Body (Scrollable) */}
-            <form onSubmit={handleCreateVoter} className="flex-1 overflow-y-auto p-5 sm:p-6 text-xs">
+            <form onSubmit={handleCreateVoter} className="flex-1 overflow-y-auto p-4 sm:p-6 text-xs overscroll-contain">
               
               {/* ================= PASO 1: DATOS PERSONALES ================= */}
               {currentStep === 1 && (
@@ -1835,21 +1834,21 @@ export const VotersPage: React.FC = () => {
             </form>
 
             {/* Footer Modal con Stepper Navigation y Botones */}
-            <div className="px-5 sm:px-6 py-3.5 bg-surface-subtle border-t border-line flex items-center justify-between gap-3 shrink-0">
+            <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-surface-subtle border-t border-line flex items-center justify-between gap-2 sm:gap-3 shrink-0 modal-safe-bottom">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-line text-xs font-bold text-gray-600 shadow-2xs">
-                  Paso {currentStep} de 3
+                <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white border border-line text-[11px] sm:text-xs font-bold text-gray-600 shadow-2xs">
+                  {currentStep}/3
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {currentStep > 1 && (
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-white text-gray-700 border border-line-strong rounded-xl hover:bg-surface-subtle font-semibold text-xs sm:text-sm transition"
+                    className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 bg-white text-gray-700 border border-line-strong rounded-xl hover:bg-surface-subtle active:bg-gray-100 font-semibold text-xs sm:text-sm transition"
                   >
-                    <ChevronLeft className="w-4 h-4" /> Atrás
+                    <ChevronLeft className="w-4 h-4" /> <span className="hidden sm:inline">Atrás</span>
                   </button>
                 )}
 
@@ -1857,7 +1856,7 @@ export const VotersPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-navy text-white rounded-xl hover:bg-navy-deep font-semibold text-xs sm:text-sm shadow-md transition"
+                    className="inline-flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 bg-navy text-white rounded-xl hover:bg-navy-deep active:bg-navy-deep font-semibold text-xs sm:text-sm shadow-md transition"
                   >
                     Siguiente <ChevronRight className="w-4 h-4" />
                   </button>
@@ -1866,19 +1865,19 @@ export const VotersPage: React.FC = () => {
                     type="button"
                     onClick={handleCreateVoter}
                     disabled={savingVoter}
-                    className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-navy text-white rounded-xl hover:bg-navy-deep font-semibold text-xs sm:text-sm shadow-md transition disabled:opacity-60"
+                    className="inline-flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 bg-navy text-white rounded-xl hover:bg-navy-deep active:bg-navy-deep font-semibold text-xs sm:text-sm shadow-md transition disabled:opacity-60"
                   >
                     {savingVoter ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Guardando...
+                        <Loader2 className="w-4 h-4 animate-spin" /> <span className="hidden sm:inline">Guardando...</span><span className="sm:hidden">...</span>
                       </>
                     ) : editingVoterId ? (
                       <>
-                        <Check className="w-4 h-4" /> Guardar Cambios
+                        <Check className="w-4 h-4" /> <span className="hidden sm:inline">Guardar Cambios</span><span className="sm:hidden">Guardar</span>
                       </>
                     ) : (
                       <>
-                        <Check className="w-4 h-4" /> Registrar Votante
+                        <Check className="w-4 h-4" /> <span className="hidden sm:inline">Registrar Votante</span><span className="sm:hidden">Registrar</span>
                       </>
                     )}
                   </button>
@@ -1891,50 +1890,49 @@ export const VotersPage: React.FC = () => {
       )}
       {/* Modal de Gestión de Seguimiento */}
       {isSeguimientoModalOpen && selectedVoterForSeguimiento && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-          <div className="bg-white border border-line rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-xs z-50 flex items-start sm:items-center justify-center p-0 sm:p-5 overflow-y-auto">
+          <div className="bg-white border-0 sm:border border-line rounded-none sm:rounded-2xl w-full max-w-lg shadow-2xl flex flex-col min-h-screen sm:min-h-0 sm:max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-line flex items-center justify-between bg-surface-subtle">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-navy/10 text-navy flex items-center justify-center font-bold">
-                  <Clock className="w-5 h-5 text-navy" />
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-line flex items-center justify-between bg-surface-subtle">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-navy/10 text-navy flex items-center justify-center font-bold shrink-0">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-navy" />
                 </div>
-                <div>
-                  <h3 className="font-heading font-bold text-base text-gray-800">
+                <div className="min-w-0">
+                  <h3 className="font-heading font-bold text-sm sm:text-base text-gray-800">
                     Gestión de Seguimiento
                   </h3>
-                  <p className="text-[11px] text-gray-500">
-                    Control de contacto y compromisos del votante
+                  <p className="text-[10px] sm:text-[11px] text-gray-500 truncate">
+                    Control de contacto y compromisos
                   </p>
                 </div>
               </div>
               <button
                 onClick={closeSeguimientoModal}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition"
+                className="text-gray-400 hover:text-gray-600 p-2 sm:p-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition shrink-0 -mr-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Voter Info Card */}
-            <div className="bg-slate-50 border-b border-line px-5 py-3 flex items-center justify-between gap-3 text-xs">
-              <div>
-                <span className="font-bold text-gray-800 text-sm">
+            <div className="bg-slate-50 border-b border-line px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 text-xs">
+              <div className="min-w-0">
+                <span className="font-bold text-gray-800 text-sm block truncate">
                   {selectedVoterForSeguimiento.nombres} {selectedVoterForSeguimiento.apellidos}
                 </span>
-                <div className="text-gray-500 text-[11px] flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                <div className="text-gray-500 text-[11px] flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-0.5 mt-0.5">
                   <span>CC: {selectedVoterForSeguimiento.cedula}</span>
                   <span>📞 {selectedVoterForSeguimiento.telefono || 'Sin celular'}</span>
-                  <span>🏘️ {selectedVoterForSeguimiento.barrioVereda || selectedVoterForSeguimiento.municipio}</span>
                 </div>
               </div>
-              <div>
+              <div className="shrink-0">
                 {getFidelizacionBadge(selectedVoterForSeguimiento.nivelFidelizacion)}
               </div>
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveSeguimiento} className="p-5 space-y-4 overflow-y-auto flex-1">
+            <form onSubmit={handleSaveSeguimiento} className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto flex-1 overscroll-contain">
               {/* Usuario Responsable */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -2012,7 +2010,7 @@ export const VotersPage: React.FC = () => {
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Tipo de Seguimiento
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2">
                   {[
                     { id: 'Llamada', label: '📞 Llamada' },
                     { id: 'WhatsApp', label: '💬 WhatsApp' },
@@ -2025,7 +2023,7 @@ export const VotersPage: React.FC = () => {
                       key={t.id}
                       type="button"
                       onClick={() => setSeguimientoForm({ ...seguimientoForm, tipoSeguimiento: t.id as any })}
-                      className={`px-2.5 py-2 rounded-xl text-xs font-medium border text-center transition ${
+                      className={`px-2 sm:px-2.5 py-2.5 sm:py-2 rounded-xl text-xs font-medium border text-center transition active:scale-95 ${
                         seguimientoForm.tipoSeguimiento === t.id
                           ? 'bg-navy text-white border-navy font-semibold shadow-xs'
                           : 'bg-white text-gray-700 border-line-strong hover:bg-surface-subtle'
@@ -2054,7 +2052,7 @@ export const VotersPage: React.FC = () => {
                       key={st.id}
                       type="button"
                       onClick={() => setSeguimientoForm({ ...seguimientoForm, estado: st.id as any })}
-                      className={`px-2.5 py-2 rounded-xl text-xs font-medium border transition text-left flex items-center justify-between ${
+                      className={`px-2 sm:px-2.5 py-2.5 sm:py-2 rounded-xl text-xs font-medium border transition text-left flex items-center justify-between active:scale-95 ${
                         seguimientoForm.estado === st.id
                           ? `${st.bg} ${st.border} font-bold ring-2 ring-navy/20 shadow-xs`
                           : 'bg-white text-gray-600 border-line-strong hover:bg-surface-subtle'
@@ -2108,18 +2106,18 @@ export const VotersPage: React.FC = () => {
               )}
 
               {/* Modal Footer Actions */}
-              <div className="pt-3 border-t border-line flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-line flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 modal-safe-bottom">
                 <button
                   type="button"
                   onClick={closeSeguimientoModal}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 transition"
+                  className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition flex-1 sm:flex-none"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingSeguimiento}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 bg-navy hover:bg-navy-deep text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md transition disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 sm:py-2 bg-navy hover:bg-navy-deep active:bg-navy-deep text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md transition disabled:opacity-60 flex-1 sm:flex-none"
                 >
                   {savingSeguimiento ? (
                     <>
