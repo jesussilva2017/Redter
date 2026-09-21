@@ -54,11 +54,11 @@ const MainLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Navbar */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-line sticky top-0 z-30 px-4 sm:px-6 md:px-8 py-3.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="bg-white/90 backdrop-blur-md border-b border-line sticky top-0 z-30 px-3 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden text-gray-500 hover:text-navy p-1.5 -ml-1.5 rounded-lg hover:bg-surface-subtle"
+              className="md:hidden text-gray-500 hover:text-navy p-1.5 -ml-1 rounded-lg hover:bg-surface-subtle"
               aria-label="Abrir menú"
             >
               <Menu className="w-5 h-5" />
@@ -69,10 +69,11 @@ const MainLayout: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-subtle border border-line text-xs font-semibold text-navy">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-surface-subtle border border-line text-[11px] sm:text-xs font-semibold text-navy">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Operaciones Activas
+              <span className="hidden xs:inline">Operaciones Activas</span>
+              <span className="xs:hidden">Activo</span>
             </div>
           </div>
         </header>

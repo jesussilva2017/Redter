@@ -250,14 +250,7 @@ export const events = mysqlTable('events', {
   id: varchar('id', { length: 36 }).primaryKey(),
   titulo: varchar('titulo', { length: 200 }).notNull(),
   descripcion: text('descripcion'),
-  tipo: mysqlEnum('tipo', [
-    'REUNION_LIDERES',
-    'EVENTO_BARRIAL',
-    'MITIN_MASIVO',
-    'CANVASSING',
-    'CAPACITACION',
-    'TAREA_LOGISTICA'
-  ]).notNull(),
+  tipo: varchar('tipo', { length: 100 }).notNull(),
   estado: mysqlEnum('estado', [
     'PROGRAMADO',
     'EN_PROCESO',
@@ -268,10 +261,12 @@ export const events = mysqlTable('events', {
   municipio: varchar('municipio', { length: 100 }).notNull(),
   barrioVereda: varchar('barrio_vereda', { length: 100 }),
   direccion: varchar('direccion', { length: 200 }),
+  encargado: varchar('encargado', { length: 200 }),
   latitude: varchar('latitude', { length: 50 }),
   longitude: varchar('longitude', { length: 50 }),
   fechaInicio: timestamp('fecha_inicio').notNull(),
   fechaFin: timestamp('fecha_fin').notNull(),
+  observaciones: text('observaciones'),
   organizadorUserId: varchar('organizador_user_id', { length: 36 }).notNull(),
   puestoVotacionRelacionadoId: varchar('puesto_votacion_relacionado_id', { length: 36 }),
   aforoEstimado: int('aforo_estimado').default(0).notNull(),

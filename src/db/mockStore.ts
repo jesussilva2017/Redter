@@ -49,16 +49,18 @@ export interface MockEvent {
   id: string;
   titulo: string;
   descripcion: string;
-  tipo: 'REUNION_LIDERES' | 'EVENTO_BARRIAL' | 'MITIN_MASIVO' | 'CANVASSING' | 'CAPACITACION' | 'TAREA_LOGISTICA';
+  tipo: string;
   estado: 'PROGRAMADO' | 'EN_PROCESO' | 'COMPLETADO' | 'CANCELADO';
   departamento: string;
   municipio: string;
   barrioVereda: string;
   direccion: string;
+  encargado?: string;
   latitude?: string;
   longitude?: string;
   fechaInicio: string;
   fechaFin: string;
+  observaciones?: string;
   organizadorUserId: string;
   puestoVotacionRelacionadoId?: string;
   aforoEstimado: number;
@@ -87,12 +89,14 @@ export const initialEvents: MockEvent[] = [
     id: 'event-1',
     titulo: 'Gran Gran Encuentro de Líderes por Usaquén',
     descripcion: 'Reunión de alineación estratégica con líderes comunales y capitanes de puesto.',
-    tipo: 'REUNION_LIDERES',
+    tipo: 'REUNION',
     estado: 'PROGRAMADO',
-    departamento: 'Cundinamarca',
-    municipio: 'Bogotá D.C.',
-    barrioVereda: 'Usaquén',
+    departamento: '',
+    municipio: '',
+    barrioVereda: '',
     direccion: 'Salon Comunal Santa Bárbara - Cra 7 # 165',
+    encargado: 'Carlos Rodríguez',
+    observaciones: 'Coordinar transporte para líderes de la zona alta de Usaquén.',
     latitude: '4.7456',
     longitude: '-74.0289',
     fechaInicio: new Date(Date.now() + 86400000 * 2).toISOString(), // En 2 días
@@ -107,12 +111,14 @@ export const initialEvents: MockEvent[] = [
     id: 'event-2',
     titulo: 'Mitin de Cierre de Campaña Local - Usaquén',
     descripcion: 'Presentación de propuestas del candidato con la comunidad.',
-    tipo: 'MITIN_MASIVO',
+    tipo: 'EVENTO',
     estado: 'PROGRAMADO',
-    departamento: 'Cundinamarca',
-    municipio: 'Bogotá D.C.',
-    barrioVereda: 'Usaquén Centro',
+    departamento: '',
+    municipio: '',
+    barrioVereda: '',
     direccion: 'Plaza Principal de Usaquén',
+    encargado: 'María Fernanda Gómez',
+    observaciones: 'Requerido permiso de la alcaldía local y sonido profesional.',
     latitude: '4.6978',
     longitude: '-74.0312',
     fechaInicio: new Date(Date.now() + 86400000 * 7).toISOString(),
@@ -189,6 +195,20 @@ class MemoryStore {
     return newEvent;
   }
 
+  updateEvent(id: string, updates: Partial<MockEvent>) {
+    const idx = this.events.findIndex((e) => e.id === id);
+    if (idx === -1) return null;
+    this.events[idx] = { ...this.events[idx], ...updates };
+    return this.events[idx];
+  }
+
+  deleteEvent(id: string) {
+    const idx = this.events.findIndex((e) => e.id === id);
+    if (idx === -1) return false;
+    this.events.splice(idx, 1);
+    return true;
+  }
+
   addTask(task: Omit<MockTask, 'id' | 'createdAt'>) {
     const newTask: MockTask = {
       ...task,
@@ -197,6 +217,20 @@ class MemoryStore {
     };
     this.tasks.push(newTask);
     return newTask;
+  }
+
+  updateTask(id: string, updates: Partial<MockTask>) {
+    const idx = this.tasks.findIndex((t) => t.id === id);
+    if (idx === -1) return null;
+    this.tasks[idx] = { ...this.tasks[idx], ...updates };
+    return this.tasks[idx];
+  }
+
+  deleteTask(id: string) {
+    const idx = this.tasks.findIndex((t) => t.id === id);
+    if (idx === -1) return false;
+    this.tasks.splice(idx, 1);
+    return true;
   }
 }
 

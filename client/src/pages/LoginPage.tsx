@@ -19,11 +19,11 @@ export const LoginPage: React.FC = () => {
     if (!/^\d+$/.test(val)) {
       return 'La cédula solo debe contener números.';
     }
-    if (val.length < 10) {
-      return `La cédula debe tener 10 números (faltan ${10 - val.length}).`;
+    if (val.length < 5) {
+      return 'La cédula debe tener al menos 5 dígitos.';
     }
-    if (val.length > 10) {
-      return 'La cédula no puede superar los 10 dígitos.';
+    if (val.length > 12) {
+      return 'La cédula no puede superar los 12 dígitos.';
     }
     return '';
   };
@@ -40,11 +40,11 @@ export const LoginPage: React.FC = () => {
 
   const cedulaError = (touched.cedula || submitted) ? validateCedula(cedula) : '';
   const passwordError = (touched.password || submitted) ? validatePassword(password) : '';
-  const isCedulaValid = cedula.length === 10 && /^\d+$/.test(cedula);
+  const isCedulaValid = cedula.length >= 5 && cedula.length <= 12 && /^\d+$/.test(cedula);
 
   const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Solo permitir dígitos y máximo 10 caracteres
-    const rawVal = e.target.value.replace(/\D/g, '').slice(0, 10);
+    // Permitir dígitos entre 5 y 12 caracteres
+    const rawVal = e.target.value.replace(/\D/g, '').slice(0, 12);
     setCedula(rawVal);
     if (serverError) setServerError('');
   };
@@ -127,7 +127,7 @@ export const LoginPage: React.FC = () => {
                       : 'text-gray-400'
                   }`}
                 >
-                  {cedula.length}/10 dígitos
+                  {cedula.length} dígitos
                 </span>
               </div>
 

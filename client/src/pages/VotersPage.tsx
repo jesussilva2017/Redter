@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { Voter, Puesto, User as UserModel, EstadoSeguimiento, TipoSeguimiento, VoterSeguimiento } from '../types';
+import { confirmDelete, showErrorAlert, showToast } from '../utils/alerts';
 import { useAuth } from '../context/AuthContext';
 import { DEPARTAMENTOS_COLOMBIA, MUNICIPIOS_COLOMBIA } from '../data/colombiaData';
 import { BARRIOS_GARZON, VEREDAS_GARZON } from '../data/garzonData';
@@ -524,9 +525,10 @@ export const VotersPage: React.FC = () => {
   const handleConfirmVote = async (voterId: string) => {
     try {
       await axios.patch(`/api/v1/voters/${voterId}/confirm-vote`);
+      showToast('Voto marcado como confirmado', 'success');
       fetchVoters();
     } catch (err) {
-      alert('Error al marcar voto confirmado');
+      showErrorAlert('Error', 'Error al marcar voto confirmado');
     }
   };
 
@@ -633,16 +635,53 @@ export const VotersPage: React.FC = () => {
     }
   };
 
-  // Paginación y Filtrado Dinámico
+  const getDaysUntilNextBirthday = (fechaNacimiento?: string | null): number => {
+    if (!fechaNacimiento) return 9999;
+    try {
+      const rawDateStr = String(fechaNacimiento).split('T')[0];
+      const parts = rawDateStr.split('-');
+      if (parts.length < 3) return 9999;
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (isNaN(month) || isNaN(day)) return 9999;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let nextBirthday = new Date(today.getFullYear(), month, day);
+      nextBirthday.setHours(0, 0, 0, 0);
+
+      if (nextBirthday.getTime() < today.getTime()) {
+        nextBirthday = new Date(today.getFullYear() + 1, month, day);
+        nextBirthday.setHours(0, 0, 0, 0);
+      }
+
+      const diffMs = nextBirthday.getTime() - today.getTime();
+      return Math.round(diffMs / (1000 * 60 * 60 * 24));
+    } catch (err) {
+      return 9999;
+    }
+  };
+
+  // Paginación y Filtrado Dinámico (Priorizando personas próximas a cumplir años)
   useEffect(() => {
     setCurrentPage(1);
   }, [search, nivelFilter, seguimientoFilter, pageSize]);
 
-  const totalRecords = voters.length;
+  const sortedVoters = [...voters].sort((a, b) => {
+    const daysA = getDaysUntilNextBirthday(a.fechaNacimiento);
+    const daysB = getDaysUntilNextBirthday(b.fechaNacimiento);
+    if (daysA !== daysB) {
+      return daysA - daysB;
+    }
+    return a.nombres.localeCompare(b.nombres);
+  });
+
+  const totalRecords = sortedVoters.length;
   const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
   const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const startIndex = (validCurrentPage - 1) * pageSize;
-  const paginatedVoters = voters.slice(startIndex, startIndex + pageSize);
+  const paginatedVoters = sortedVoters.slice(startIndex, startIndex + pageSize);
   const startRecord = totalRecords === 0 ? 0 : startIndex + 1;
   const endRecord = Math.min(startIndex + pageSize, totalRecords);
 
@@ -696,8 +735,9 @@ export const VotersPage: React.FC = () => {
       }));
 
       closeSeguimientoModal();
+      showToast('Seguimiento registrado exitosamente', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al guardar el seguimiento');
+      showErrorAlert('Error al guardar seguimiento', err.response?.data?.error || 'Error al guardar el seguimiento');
     } finally {
       setSavingSeguimiento(false);
     }
@@ -709,7 +749,7 @@ export const VotersPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl text-gray-800 flex items-center gap-2">
-            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-navy" /> CRM Votantes & Segmentación
+            <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-navy" /> Ciudadanos y Segmentación
           </h1>
           <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
             Gestión 360° de simpatizantes, asignación por puestos de votación e intención de voto.
@@ -719,7 +759,7 @@ export const VotersPage: React.FC = () => {
           onClick={openModal}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-navy hover:bg-navy-deep active:bg-navy-deep text-white font-semibold text-sm rounded-xl shadow-md transition w-full sm:w-auto"
         >
-          <Plus className="w-4 h-4" /> Registrar Nuevo Votante
+          <Plus className="w-4 h-4" /> Registrar Nuevo Ciudadano
         </button>
       </div>
 
@@ -770,9 +810,9 @@ export const VotersPage: React.FC = () => {
           <table className="w-full text-left text-xs text-gray-600 mobile-card-table">
             <thead className="bg-surface-subtle text-gray-500 uppercase tracking-wider font-semibold border-b border-line">
               <tr>
-                <th className="py-4 px-5 w-[20%] min-w-[220px]">Votante / Documento</th>
+                <th className="py-4 px-5 w-[20%] min-w-[220px]">Ciudadano / Documento</th>
                 <th className="py-4 px-5 w-[18%] min-w-[210px]">Profesión u Oficio</th>
-                <th className="py-4 px-5 w-[14%] min-w-[165px]">Cumpleaños</th>
+                <th className="py-4 px-5 w-[14%] min-w-[165px]">Cumpleaños 🎂</th>
                 <th className="py-4 px-5 w-[18%] min-w-[210px]">Ubicación</th>
                 <th className="py-4 px-5 w-[11%] min-w-[140px]">Contacto</th>
                 <th className="py-4 px-5 w-[9%] min-w-[125px]">Fidelización</th>
@@ -1877,7 +1917,7 @@ export const VotersPage: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <Check className="w-4 h-4" /> <span className="hidden sm:inline">Registrar Votante</span><span className="sm:hidden">Registrar</span>
+                        <Check className="w-4 h-4" /> <span className="hidden sm:inline">Registrar Ciudadano</span><span className="sm:hidden">Registrar</span>
                       </>
                     )}
                   </button>

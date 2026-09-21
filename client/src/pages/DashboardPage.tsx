@@ -3,7 +3,7 @@ import {
   Users,
   UserCheck,
   Calendar,
-  Truck,
+  CheckSquare,
   TrendingUp,
   CheckCircle2,
   MapPin,
@@ -15,6 +15,7 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<any>({ total: 0, seguros: 0, simpatizantes: 0, indecisos: 0, transporte: 0 });
   const [eventsCount, setEventsCount] = useState(0);
+  const [tasksCount, setTasksCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
 
   useEffect(() => {
@@ -23,14 +24,16 @@ export const DashboardPage: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [votersRes, eventsRes, usersRes] = await Promise.all([
+      const [votersRes, eventsRes, tasksRes, usersRes] = await Promise.all([
         axios.get('/api/v1/voters'),
         axios.get('/api/v1/events'),
+        axios.get('/api/v1/events/tasks/all'),
         axios.get('/api/v1/users'),
       ]);
 
       setMetrics(votersRes.data.metrics || {});
       setEventsCount(eventsRes.data.events?.length || 0);
+      setTasksCount(tasksRes.data.tasks?.length || 0);
       setUsersCount(usersRes.data.users?.length || 0);
     } catch (err) {
       console.error('Error al cargar métricas del dashboard:', err);
@@ -90,15 +93,15 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Requieren Transporte Día D */}
+        {/* Tareas Logísticas */}
         <div className="bg-white p-5 rounded-2xl border border-line flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Logística Transporte</p>
-            <h3 className="font-heading text-3xl font-extrabold text-amber-600 mt-1">{metrics.transporte}</h3>
-            <p className="text-xs text-gray-500 mt-2">Votantes que requieren apoyo</p>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tareas Logísticas</p>
+            <h3 className="font-heading text-3xl font-extrabold text-amber-600 mt-1">{tasksCount}</h3>
+            <p className="text-xs text-gray-500 mt-2">Actividades y tareas operativas</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
-            <Truck className="w-6 h-6" />
+            <CheckSquare className="w-6 h-6" />
           </div>
         </div>
 

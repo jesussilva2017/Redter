@@ -42,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'TESTIGO', 'VOLUNTARIO'] },
-    { id: 'voters', label: 'Votantes y CRM', icon: UserCheck, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'TESTIGO'] },
+    { id: 'voters', label: 'Ciudadanos', icon: UserCheck, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'TESTIGO'] },
     { id: 'users', label: 'Usuarios y Roles', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER'] },
     { id: 'events', label: 'Agenda y Eventos', icon: CalendarDays, roles: ['SUPER_ADMIN', 'ADMIN_CAMPANA', 'COORDINADOR', 'LIDER', 'VOLUNTARIO', 'TESTIGO'] },
   ];
@@ -63,12 +63,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       )}
 
       <aside
-        className={`w-64 bg-white border-r border-line flex flex-col h-screen fixed md:sticky top-0 left-0 z-50 transition-transform duration-200 ${
+        className={`w-64 bg-white border-r border-line flex flex-col h-[100dvh] max-h-[100dvh] fixed md:sticky top-0 left-0 z-50 shadow-2xl md:shadow-none transition-transform duration-200 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
       {/* Brand Header */}
-      <div className="p-5 border-b border-line flex items-center gap-3">
+      <div className="p-5 border-b border-line flex items-center gap-3 shrink-0">
         <div className="w-10 h-10 rounded-xl bg-navy flex items-center justify-center shadow-md">
           <Vote className="w-6 h-6 text-white" />
         </div>
@@ -76,15 +76,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
           <h1 className="font-heading font-bold text-lg text-navy leading-tight">REDTER</h1>
           <p className="text-xs text-gray-500 font-medium tracking-wide">Gestión Territorial</p>
         </div>
-        <button onClick={onClose} className="md:hidden text-gray-400 hover:text-gray-700">
+        <button onClick={onClose} className="md:hidden text-gray-400 hover:text-gray-700 p-1">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* User Info Card */}
-      <div className="p-4 mx-3 my-4 rounded-xl bg-surface-subtle border border-line">
+      <div className="p-4 mx-3 my-4 rounded-xl bg-surface-subtle border border-line shrink-0">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-9 h-9 rounded-full bg-line flex items-center justify-center font-bold text-navy border border-line-strong">
+          <div className="w-9 h-9 rounded-full bg-line flex items-center justify-center font-bold text-navy border border-line-strong shrink-0">
             {user?.nombre?.charAt(0) || 'U'}
           </div>
           <div className="overflow-hidden">
@@ -127,10 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       </nav>
 
       {/* Footer / Logout */}
-      <div className="p-4 border-t border-line">
+      <div className="p-4 pb-6 border-t border-line shrink-0 bg-white">
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 border border-red-200 transition"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 border border-red-200 transition shadow-sm"
         >
           <LogOut className="w-4 h-4" />
           Cerrar Sesión
