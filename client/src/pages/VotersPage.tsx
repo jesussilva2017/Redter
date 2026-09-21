@@ -32,7 +32,7 @@ import { Voter, Puesto, User as UserModel, EstadoSeguimiento, TipoSeguimiento, V
 import { confirmDelete, showErrorAlert, showToast } from '../utils/alerts';
 import { useAuth } from '../context/AuthContext';
 import { DEPARTAMENTOS_COLOMBIA, MUNICIPIOS_COLOMBIA } from '../data/colombiaData';
-import { BARRIOS_GARZON, VEREDAS_GARZON } from '../data/garzonData';
+import { BARRIOS_GARZON, VEREDAS_GARZON, BarrioItem, VeredaItem } from '../data/garzonData';
 import { ZONAS_VOTACION_GARZON, PUESTOS_VOTACION_GARZON, MESAS_VOTACION_GARZON } from '../data/garzonVotacionData';
 import { SearchableSelect } from '../components/SearchableSelect';
 
@@ -316,22 +316,28 @@ export const VotersPage: React.FC = () => {
     return items;
   }, [selectedPuestoObj]);
 
+  // Estado de Barrios y Veredas dinámicos de la base de datos
+  const [barriosList, setBarriosList] = useState<BarrioItem[]>(BARRIOS_GARZON);
+  const [veredasList, setVeredasList] = useState<VeredaItem[]>(VEREDAS_GARZON);
+
   // Opciones de Barrios y Veredas de Garzón (Huila)
   const barriosOptions = React.useMemo(() => {
-    return BARRIOS_GARZON.map(b => ({
+    const source = barriosList && barriosList.length > 0 ? barriosList : BARRIOS_GARZON;
+    return source.map(b => ({
       id: b.id,
       label: b.nombre,
       subtitle: b.codigoPostal ? `C.P. ${b.codigoPostal}` : 'Zona urbana de Garzón',
     }));
-  }, []);
+  }, [barriosList]);
 
   const veredasOptions = React.useMemo(() => {
-    return VEREDAS_GARZON.map(v => ({
+    const source = veredasList && veredasList.length > 0 ? veredasList : VEREDAS_GARZON;
+    return source.map(v => ({
       id: v.id,
       label: v.nombre,
       subtitle: v.descripcion || 'Zona rural de Garzón',
     }));
-  }, []);
+  }, [veredasList]);
 
   useEffect(() => {
     fetchVoters();
@@ -357,12 +363,20 @@ export const VotersPage: React.FC = () => {
 
   const fetchAuxiliaryData = async () => {
     try {
-      const [puestosRes, usersRes] = await Promise.all([
+      const [puestosRes, usersRes, barriosRes, veredasRes] = await Promise.all([
         axios.get('/api/v1/territory/puestos'),
         axios.get('/api/v1/users'),
+        axios.get('/api/v1/territory/barrios'),
+        axios.get('/api/v1/territory/veredas'),
       ]);
       setPuestos(puestosRes.data.puestos || []);
       setLeaders(usersRes.data.users || []);
+      if (barriosRes.data?.barrios && barriosRes.data.barrios.length > 0) {
+        setBarriosList(barriosRes.data.barrios);
+      }
+      if (veredasRes.data?.veredas && veredasRes.data.veredas.length > 0) {
+        setVeredasList(veredasRes.data.veredas);
+      }
     } catch (err) {
       console.error('Error al cargar datos auxiliares:', err);
     }
