@@ -164,7 +164,7 @@ export const EventsPage: React.FC = () => {
   // Filtros y Buscador para Eventos
   const [searchTermEvents, setSearchTermEvents] = useState('');
   const [tipoFilter, setTipoFilter] = useState('');
-  const [estadoFilter, setEstadoFilter] = useState('');
+  const [estadoFilter, setEstadoFilter] = useState('PROGRAMADO');
   const [fechaFilter, setFechaFilter] = useState('');
 
   // Modales y estados de edición/eliminación
@@ -577,17 +577,17 @@ export const EventsPage: React.FC = () => {
                   onChange={(e) => setFechaFilter(e.target.value)}
                   className="w-full sm:w-auto sm:min-w-[140px] max-w-full box-border px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
                 />
-                {(fechaFilter || estadoFilter || tipoFilter || searchTermEvents) && (
+                {(fechaFilter || estadoFilter !== 'PROGRAMADO' || tipoFilter || searchTermEvents) && (
                   <button
                     type="button"
                     onClick={() => {
                       setFechaFilter('');
-                      setEstadoFilter('');
+                      setEstadoFilter('PROGRAMADO');
                       setTipoFilter('');
                       setSearchTermEvents('');
                     }}
                     className="text-xs text-rose-600 hover:underline font-medium shrink-0"
-                    title="Limpiar todos los filtros"
+                    title="Restablecer filtros a reuniones programadas"
                   >
                     Limpiar
                   </button>
