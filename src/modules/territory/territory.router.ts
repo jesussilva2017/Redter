@@ -153,8 +153,8 @@ territoryRouter.get('/puestos', asyncHandler(async (req, res) => {
     }
 
     const puestos = conditions.length
-      ? await db.select().from(puestosVotacion).where(and(...conditions))
-      : await db.select().from(puestosVotacion);
+      ? await db.select().from(puestosVotacion).where(and(...conditions)).orderBy(puestosVotacion.nombrePuesto)
+      : await db.select().from(puestosVotacion).orderBy(puestosVotacion.nombrePuesto);
 
     if (puestos && puestos.length > 0) {
       let result = puestos;
@@ -165,7 +165,7 @@ territoryRouter.get('/puestos', asyncHandler(async (req, res) => {
           if (!p.zona) return false;
           const pz = p.zona.toLowerCase();
           const pzNum = pz.match(/zona\s*(\d+)/i)?.[1];
-          if (zNum && pzNum && zNum === pzNum) return true;
+          if (zNum && pzNum && Number(zNum) === Number(pzNum)) return true;
           return pz.includes(zTerm) || zTerm.includes(pz);
         });
       }
@@ -195,7 +195,7 @@ territoryRouter.get('/puestos', asyncHandler(async (req, res) => {
       if (!p.zona) return false;
       const pz = p.zona.toLowerCase();
       const pzNum = pz.match(/zona\s*(\d+)/i)?.[1];
-      if (zNum && pzNum && zNum === pzNum) return true;
+      if (zNum && pzNum && Number(zNum) === Number(pzNum)) return true;
       return pz.includes(zTerm) || zTerm.includes(pz);
     });
   }

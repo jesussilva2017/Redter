@@ -110,8 +110,8 @@ const initialVoterForm = {
   // Paso 3: Información electoral
   departamento: 'Huila',
   municipio: 'Garzón',
-  zonaElectoral: 'Zona 1 - Centro Urbano',
-  puestoVotacionId: 'puesto-garzon-1',
+  zonaElectoral: '',
+  puestoVotacionId: '',
   mesa: 1,
   leaderId: 'user-admin',
   nivelFidelizacion: 'SIMPATIZANTE' as const,
@@ -211,24 +211,6 @@ export const VotersPage: React.FC = () => {
       }));
   }, [selectedElectoralDeptObj]);
 
-  // Zonas electorales para el Paso 3
-  const zonasElectoralesOptions = React.useMemo(() => {
-    const isGarzon = !newVoter.municipio || newVoter.municipio.toLowerCase().includes('garz');
-    if (isGarzon) {
-      return ZONAS_VOTACION_GARZON.map(z => ({
-        id: z.id,
-        label: z.nombre,
-        subtitle: z.descripcion || `Tipo: ${z.tipo}`,
-      }));
-    }
-    const distinctZonas = Array.from(new Set(puestos.map(p => p.zona).filter(Boolean)));
-    return distinctZonas.map((z, idx) => ({
-      id: idx + 1,
-      label: z,
-      subtitle: 'Zona electoral',
-    }));
-  }, [newVoter.municipio, puestos]);
-
   // Lista combinada de puestos con fallback seguro a PUESTOS_VOTACION_GARZON
   const allAvailablePuestos = React.useMemo(() => {
     const list = [...puestos];
@@ -254,6 +236,39 @@ export const VotersPage: React.FC = () => {
     return list;
   }, [puestos]);
 
+  // Zonas electorales para el Paso 3
+  const zonasElectoralesOptions = React.useMemo(() => {
+    // Si tenemos puestos cargados de la base de datos, extraer las zonas reales y únicas de los puestos
+    const distinctZonas = Array.from(
+      new Set(allAvailablePuestos.map((p) => p.zona).filter(Boolean))
+    );
+
+    if (distinctZonas.length > 0) {
+      return distinctZonas
+        .sort((a, b) => {
+          const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
+          const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
+          return numA - numB;
+        })
+        .map((z, idx) => {
+          const numMatch = z.match(/\d+/);
+          const num = numMatch ? parseInt(numMatch[0], 10) : idx + 1;
+          const known = ZONAS_VOTACION_GARZON.find((zg) => zg.numero === num);
+          return {
+            id: num,
+            label: z,
+            subtitle: known?.descripcion || `Zona electoral ${z}`,
+          };
+        });
+    }
+
+    return ZONAS_VOTACION_GARZON.map((z) => ({
+      id: z.id,
+      label: z.nombre,
+      subtitle: z.descripcion || `Tipo: ${z.tipo}`,
+    }));
+  }, [allAvailablePuestos]);
+
   const filteredPuestos = React.useMemo(() => {
     const norm = (s?: string | null) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
 
@@ -268,7 +283,7 @@ export const VotersPage: React.FC = () => {
         const selNum = selNorm.match(/zona\s*(\d+)/i)?.[1];
         const pzNum = pzNorm.match(/zona\s*(\d+)/i)?.[1];
 
-        if (selNum && pzNum && selNum === pzNum) {
+        if (selNum && pzNum && Number(selNum) === Number(pzNum)) {
           matchZona = true;
         } else if (selNorm && pzNorm && (pzNorm.includes(selNorm) || selNorm.includes(pzNorm))) {
           matchZona = true;
@@ -284,7 +299,7 @@ export const VotersPage: React.FC = () => {
   const puestosOptions = React.useMemo(() => {
     return filteredPuestos.map((p) => ({
       id: p.id,
-      label: p.nombrePuesto,
+      label: p.nombrePuesto || (p as any).nombre || 'Puesto sin nombre',
       subtitle: `${p.zona || ''} • ${p.direccion || ''} ${p.barrioVereda ? '(' + p.barrioVereda + ')' : ''} • ${p.totalMesas || p.mesasTotales || 1} mesas`,
     }));
   }, [filteredPuestos]);
@@ -296,21 +311,15 @@ export const VotersPage: React.FC = () => {
 
   const mesasOptions = React.useMemo(() => {
     if (!selectedPuestoObj) return [];
-    const garzonMesas = MESAS_VOTACION_GARZON.filter(m => m.puestoId === selectedPuestoObj.id);
-    if (garzonMesas.length > 0) {
-      return garzonMesas.map(m => ({
-        id: m.numero,
-        label: `Mesa ${m.numero}`,
-        subtitle: `Código ${m.codigo}`,
-      }));
-    }
     const total = selectedPuestoObj.totalMesas || selectedPuestoObj.mesasTotales || 1;
+    const garzonMesas = MESAS_VOTACION_GARZON.filter(m => m.puestoId === selectedPuestoObj.id);
     const items = [];
     for (let i = 1; i <= total; i++) {
+      const mesaInfo = garzonMesas.find(m => m.numero === i);
       items.push({
         id: i,
         label: `Mesa ${i}`,
-        subtitle: `Mesa N° ${i}`,
+        subtitle: mesaInfo ? `Código ${mesaInfo.codigo}` : `Mesa N° ${i}`,
       });
     }
     return items;
@@ -383,6 +392,7 @@ export const VotersPage: React.FC = () => {
   };
 
   const openModal = () => {
+    fetchAuxiliaryData();
     setEditingVoterId(null);
     setCurrentStep(1);
     setStepError('');
@@ -404,6 +414,7 @@ export const VotersPage: React.FC = () => {
   };
 
   const openEditVoterModal = (voter: Voter) => {
+    fetchAuxiliaryData();
     setEditingVoterId(voter.id);
     setCurrentStep(1);
     setStepError('');
