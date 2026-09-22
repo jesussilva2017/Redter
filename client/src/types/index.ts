@@ -115,7 +115,7 @@ export interface CampaignEvent {
   titulo: string;
   descripcion: string;
   tipo: string;
-  estado: 'PROGRAMADO' | 'EN_PROCESO' | 'COMPLETADO' | 'CANCELADO';
+  estado: 'PROGRAMADO' | 'COMPLETADO' | 'CANCELADO';
   departamento: string;
   municipio: string;
   barrioVereda: string;

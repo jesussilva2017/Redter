@@ -10,6 +10,20 @@ export const eventsRouter = Router();
 
 eventsRouter.use(authenticate);
 
+// Helper para convertir fecha a objeto Date respetando la zona horaria de Colombia (-05:00)
+const parseDateToDb = (dateVal?: string | Date | null): Date | null => {
+  if (!dateVal) return null;
+  if (dateVal instanceof Date) return dateVal;
+  if (typeof dateVal === 'string') {
+    // Si viene en formato "YYYY-MM-DDTHH:mm" sin offset ni Z, asumir zona horaria de Colombia (-05:00)
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$/.test(dateVal)) {
+      return new Date(dateVal.replace(' ', 'T') + '-05:00');
+    }
+    return new Date(dateVal);
+  }
+  return new Date();
+};
+
 // GET /api/v1/events - Listar eventos de la campaña
 eventsRouter.get('/', async (req: AuthenticatedRequest, res) => {
   try {
@@ -37,6 +51,7 @@ eventsRouter.post('/', async (req: AuthenticatedRequest, res) => {
     titulo,
     descripcion,
     tipo,
+    estado,
     departamento,
     municipio,
     barrioVereda,
@@ -56,12 +71,15 @@ eventsRouter.post('/', async (req: AuthenticatedRequest, res) => {
   }
 
   const newId = `event-${uuidv4().substring(0, 8)}`;
+  const fechaInicioDate = parseDateToDb(fechaInicio) || new Date();
+  const fechaFinDate = parseDateToDb(fechaFin) || new Date(fechaInicioDate.getTime() + 7200000);
+
   const eventPayload = {
     id: newId,
     titulo,
     descripcion: descripcion || '',
     tipo,
-    estado: 'PROGRAMADO' as const,
+    estado: ((estado as any) || 'PROGRAMADO') as 'PROGRAMADO' | 'COMPLETADO' | 'CANCELADO',
     departamento: departamento || '',
     municipio: municipio || '',
     barrioVereda: barrioVereda || '',
@@ -69,8 +87,8 @@ eventsRouter.post('/', async (req: AuthenticatedRequest, res) => {
     encargado: encargado || '',
     latitude: latitude || '',
     longitude: longitude || '',
-    fechaInicio: new Date(fechaInicio),
-    fechaFin: new Date(fechaFin),
+    fechaInicio: fechaInicioDate,
+    fechaFin: fechaFinDate,
     observaciones: observaciones || '',
     organizadorUserId: req.user!.userId,
     puestoVotacionRelacionadoId: puestoVotacionRelacionadoId || null,
@@ -90,7 +108,7 @@ eventsRouter.post('/', async (req: AuthenticatedRequest, res) => {
     titulo,
     descripcion: descripcion || '',
     tipo,
-    estado: 'PROGRAMADO',
+    estado: (estado as any) || 'PROGRAMADO',
     departamento: departamento || '',
     municipio: municipio || '',
     barrioVereda: barrioVereda || '',
@@ -98,8 +116,8 @@ eventsRouter.post('/', async (req: AuthenticatedRequest, res) => {
     encargado: encargado || '',
     latitude: latitude || '',
     longitude: longitude || '',
-    fechaInicio,
-    fechaFin,
+    fechaInicio: fechaInicioDate.toISOString(),
+    fechaFin: fechaFinDate.toISOString(),
     observaciones: observaciones || '',
     organizadorUserId: req.user!.userId,
     puestoVotacionRelacionadoId,
@@ -110,8 +128,8 @@ eventsRouter.post('/', async (req: AuthenticatedRequest, res) => {
     message: 'Evento agendado exitosamente',
     event: {
       ...eventPayload,
-      fechaInicio: new Date(fechaInicio).toISOString(),
-      fechaFin: new Date(fechaFin).toISOString(),
+      fechaInicio: fechaInicioDate.toISOString(),
+      fechaFin: fechaFinDate.toISOString(),
     },
   });
 });
@@ -123,6 +141,7 @@ eventsRouter.put('/:id', async (req: AuthenticatedRequest, res) => {
     titulo,
     descripcion,
     tipo,
+    estado,
     departamento,
     municipio,
     barrioVereda,
@@ -136,12 +155,16 @@ eventsRouter.put('/:id', async (req: AuthenticatedRequest, res) => {
     aforoEstimado,
   } = req.body;
 
+  const fechaInicioDate = fechaInicio ? parseDateToDb(fechaInicio) : undefined;
+  const fechaFinDate = fechaFin ? parseDateToDb(fechaFin) : undefined;
+
   try {
     await db.update(eventsTable)
       .set({
         ...(titulo && { titulo }),
         ...(descripcion !== undefined && { descripcion }),
         ...(tipo && { tipo }),
+        ...(estado && { estado: estado as any }),
         ...(departamento && { departamento }),
         ...(municipio && { municipio }),
         ...(barrioVereda !== undefined && { barrioVereda }),
@@ -149,14 +172,29 @@ eventsRouter.put('/:id', async (req: AuthenticatedRequest, res) => {
         ...(encargado !== undefined && { encargado }),
         ...(latitude !== undefined && { latitude }),
         ...(longitude !== undefined && { longitude }),
-        ...(fechaInicio && { fechaInicio: new Date(fechaInicio) }),
-        ...(fechaFin && { fechaFin: new Date(fechaFin) }),
+        ...(fechaInicioDate && { fechaInicio: fechaInicioDate }),
+        ...(fechaFinDate && { fechaFin: fechaFinDate }),
         ...(observaciones !== undefined && { observaciones }),
         ...(aforoEstimado !== undefined && { aforoEstimado: Number(aforoEstimado) }),
       })
       .where(eq(eventsTable.id, id));
   } catch (err) {
     console.error('Error actualizando evento en DB:', err);
+  }
+
+  try {
+    const [updatedDb] = await db.select().from(eventsTable).where(eq(eventsTable.id, id)).limit(1);
+    if (updatedDb) {
+      const formatted = {
+        ...updatedDb,
+        fechaInicio: updatedDb.fechaInicio ? new Date(updatedDb.fechaInicio).toISOString() : '',
+        fechaFin: updatedDb.fechaFin ? new Date(updatedDb.fechaFin).toISOString() : '',
+      };
+      memoryStore.updateEvent(id, formatted as any);
+      return res.json({ message: 'Evento actualizado exitosamente', event: formatted });
+    }
+  } catch (err) {
+    // fallback
   }
 
   const updated = memoryStore.updateEvent(id, req.body);
@@ -227,7 +265,7 @@ eventsRouter.post('/tasks/all', async (req: AuthenticatedRequest, res) => {
     estado: 'PENDIENTE' as const,
     asignadoAUserId,
     creadoPorUserId: req.user!.userId,
-    fechaLimite: fechaLimite ? new Date(fechaLimite) : null,
+    fechaLimite: fechaLimite ? parseDateToDb(fechaLimite) : null,
     eventId: eventId || null,
   };
 
@@ -285,7 +323,7 @@ eventsRouter.put('/tasks/all/:id', async (req: AuthenticatedRequest, res) => {
         ...(prioridad && { prioridad }),
         ...(estado && { estado }),
         ...(asignadoAUserId && { asignadoAUserId }),
-        ...(fechaLimite !== undefined && { fechaLimite: fechaLimite ? new Date(fechaLimite) : null }),
+        ...(fechaLimite !== undefined && { fechaLimite: fechaLimite ? parseDateToDb(fechaLimite) : null }),
         ...(eventId !== undefined && { eventId: eventId || null }),
       })
       .where(eq(tasksTable.id, id));

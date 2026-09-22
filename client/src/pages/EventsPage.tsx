@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Calendar, 
+  CalendarDays,
   Plus, 
   MapPin, 
   Clock, 
@@ -35,6 +36,121 @@ const EVENT_TYPES = [
   { value: 'MEDIOS_COMUNICACION', label: '📺 Medios de comunicación' },
 ];
 
+// Helper para obtener string "YYYY-MM-DDTHH:mm" en la hora LOCAL del usuario
+const getNowLocalInput = (hoursAhead: number = 0): string => {
+  const d = new Date(Date.now() + hoursAhead * 3600000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+// Helper para convertir fecha a formato de input datetime-local sin desfase de zona horaria
+const formatDateTimeLocal = (dateStr?: string | null): string => {
+  if (!dateStr) return getNowLocalInput();
+
+  // Si ya es un formato local YYYY-MM-DDTHH:mm sin Z ni offset
+  const localMatch = String(dateStr).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+  if (localMatch && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/-\d{2}:\d{2}$/)) {
+    return `${localMatch[1]}T${localMatch[2]}`;
+  }
+
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const pad = (num: number) => String(num).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+  } catch {
+    // fallback
+  }
+
+  return getNowLocalInput();
+};
+
+// Helper para extraer la parte local YYYY-MM-DD para el filtro del calendario
+const getLocalDatePart = (dateStr?: string | null): string => {
+  if (!dateStr) return '';
+  const localMatch = String(dateStr).match(/^(\d{4}-\d{2}-\d{2})[T ]/);
+  if (localMatch && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/-\d{2}:\d{2}$/)) {
+    return localMatch[1];
+  }
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const pad = (num: number) => String(num).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+  } catch {
+    // fallback
+  }
+  return String(dateStr).slice(0, 10);
+};
+
+// Helper para formatear fecha y rango de horas de inicio a fin en las tarjetas
+const formatEventDisplay = (inicioStr?: string, finStr?: string): { fecha: string; horario: string } => {
+  if (!inicioStr) return { fecha: 'Fecha no definida', horario: '' };
+
+  const parseSafe = (str: string): Date => {
+    const clean = str.includes(' ') && !str.includes('T') ? str.replace(' ', 'T') : str;
+    return new Date(clean);
+  };
+
+  try {
+    const dInicio = parseSafe(inicioStr);
+    if (isNaN(dInicio.getTime())) {
+      return { fecha: String(inicioStr).replace('T', ' '), horario: '' };
+    }
+
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    const formatTimeOnly = (d: Date) => {
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours}:${minutes} ${ampm}`;
+    };
+
+    const diaNombre = diasSemana[dInicio.getDay()];
+    const diaNum = dInicio.getDate();
+    const mesNombre = meses[dInicio.getMonth()];
+    const anio = dInicio.getFullYear();
+
+    const fechaFormat = `${diaNombre}, ${diaNum} ${mesNombre} ${anio}`;
+    const horaInicio = formatTimeOnly(dInicio);
+
+    if (!finStr) {
+      return { fecha: fechaFormat, horario: horaInicio };
+    }
+
+    const dFin = parseSafe(finStr);
+    if (isNaN(dFin.getTime())) {
+      return { fecha: fechaFormat, horario: horaInicio };
+    }
+
+    // Si termina el mismo día:
+    const mismoDia = dInicio.getFullYear() === dFin.getFullYear() &&
+                     dInicio.getMonth() === dFin.getMonth() &&
+                     dInicio.getDate() === dFin.getDate();
+
+    if (mismoDia) {
+      const horaFin = formatTimeOnly(dFin);
+      return { fecha: fechaFormat, horario: `${horaInicio} – ${horaFin}` };
+    } else {
+      const diaFinNum = dFin.getDate();
+      const mesFinNombre = meses[dFin.getMonth()];
+      const horaFin = formatTimeOnly(dFin);
+      return {
+        fecha: `${diaNum} ${mesNombre} – ${diaFinNum} ${mesFinNombre} ${dFin.getFullYear()}`,
+        horario: `${horaInicio} – ${horaFin}`,
+      };
+    }
+  } catch {
+    return { fecha: String(inicioStr), horario: '' };
+  }
+};
+
 export const EventsPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const isAdminCampana = currentUser?.role === 'ADMIN_CAMPANA' || currentUser?.role === 'SUPER_ADMIN';
@@ -48,6 +164,7 @@ export const EventsPage: React.FC = () => {
   // Filtros y Buscador para Eventos
   const [searchTermEvents, setSearchTermEvents] = useState('');
   const [tipoFilter, setTipoFilter] = useState('');
+  const [estadoFilter, setEstadoFilter] = useState('');
   const [fechaFilter, setFechaFilter] = useState('');
 
   // Modales y estados de edición/eliminación
@@ -63,14 +180,14 @@ export const EventsPage: React.FC = () => {
     titulo: '',
     descripcion: '',
     tipo: 'REUNION',
-    estado: 'PROGRAMADO' as 'PROGRAMADO' | 'EN_PROCESO' | 'COMPLETADO' | 'CANCELADO',
+    estado: 'PROGRAMADO' as 'PROGRAMADO' | 'COMPLETADO' | 'CANCELADO',
     departamento: '',
     municipio: '',
     barrioVereda: '',
     direccion: '',
     encargado: '',
-    fechaInicio: new Date().toISOString().slice(0, 16),
-    fechaFin: new Date(Date.now() + 7200000).toISOString().slice(0, 16),
+    fechaInicio: getNowLocalInput(),
+    fechaFin: getNowLocalInput(2),
     observaciones: '',
     aforoEstimado: 50,
   });
@@ -81,7 +198,7 @@ export const EventsPage: React.FC = () => {
     descripcion: '',
     prioridad: 'MEDIA' as 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE',
     asignadoAUserId: '',
-    fechaLimite: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
+    fechaLimite: getNowLocalInput(48),
   });
 
   useEffect(() => {
@@ -110,36 +227,39 @@ export const EventsPage: React.FC = () => {
   const filteredEvents = useMemo(() => {
     let result = [...events];
 
-    // 1. Buscador
+    // 1. Buscador texto
     if (searchTermEvents.trim()) {
-      const q = searchTermEvents.toLowerCase().trim();
+      const q = searchTermEvents.toLowerCase();
       result = result.filter(
         (e) =>
-          (e.titulo && e.titulo.toLowerCase().includes(q)) ||
-          (e.descripcion && e.descripcion.toLowerCase().includes(q)) ||
-          (e.direccion && e.direccion.toLowerCase().includes(q)) ||
+          e.titulo.toLowerCase().includes(q) ||
+          e.descripcion.toLowerCase().includes(q) ||
+          e.direccion.toLowerCase().includes(q) ||
           (e.encargado && e.encargado.toLowerCase().includes(q)) ||
-          (e.observaciones && e.observaciones.toLowerCase().includes(q)) ||
-          (e.municipio && e.municipio.toLowerCase().includes(q)) ||
           (e.barrioVereda && e.barrioVereda.toLowerCase().includes(q))
       );
     }
 
-    // 2. Filtro Actividad
+    // 2. Filtro Tipo
     if (tipoFilter) {
       result = result.filter((e) => e.tipo === tipoFilter);
     }
 
-    // 3. Filtro Fecha
+    // 3. Filtro Estado
+    if (estadoFilter) {
+      result = result.filter((e) => e.estado === estadoFilter);
+    }
+
+    // 4. Filtro Fecha (respetando la fecha local)
     if (fechaFilter) {
       result = result.filter((e) => {
         if (!e.fechaInicio) return false;
-        const eventDateStr = String(e.fechaInicio).slice(0, 10);
+        const eventDateStr = getLocalDatePart(e.fechaInicio);
         return eventDateStr === fechaFilter;
       });
     }
 
-    // 4. Ordenar por fecha y hora de inicio (más próxima primero)
+    // 5. Ordenar por fecha y hora de inicio (más próxima primero)
     result.sort((a, b) => {
       const timeA = new Date(a.fechaInicio).getTime();
       const timeB = new Date(b.fechaInicio).getTime();
@@ -147,7 +267,7 @@ export const EventsPage: React.FC = () => {
     });
 
     return result;
-  }, [events, searchTermEvents, tipoFilter, fechaFilter]);
+  }, [events, searchTermEvents, tipoFilter, estadoFilter, fechaFilter]);
 
   const openCreateEventModal = () => {
     setEditingEventId(null);
@@ -161,8 +281,8 @@ export const EventsPage: React.FC = () => {
       barrioVereda: '',
       direccion: '',
       encargado: '',
-      fechaInicio: new Date().toISOString().slice(0, 16),
-      fechaFin: new Date(Date.now() + 7200000).toISOString().slice(0, 16),
+      fechaInicio: getNowLocalInput(),
+      fechaFin: getNowLocalInput(2),
       observaciones: '',
       aforoEstimado: 50,
     });
@@ -171,16 +291,6 @@ export const EventsPage: React.FC = () => {
 
   const openEditEventModal = (evt: CampaignEvent) => {
     setEditingEventId(evt.id);
-    const formatDateTimeLocal = (dateStr: string) => {
-      try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return new Date().toISOString().slice(0, 16);
-        const pad = (num: number) => String(num).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      } catch {
-        return new Date().toISOString().slice(0, 16);
-      }
-    };
     setNewEvent({
       titulo: evt.titulo || '',
       descripcion: evt.descripcion || '',
@@ -248,24 +358,13 @@ export const EventsPage: React.FC = () => {
       descripcion: '',
       prioridad: 'MEDIA',
       asignadoAUserId: '',
-      fechaLimite: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
+      fechaLimite: getNowLocalInput(48),
     });
     setIsTaskModalOpen(true);
   };
 
   const openEditTaskModal = (task: CampaignTask) => {
     setEditingTaskId(task.id);
-    const formatDateTimeLocal = (dateStr?: string) => {
-      if (!dateStr) return new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16);
-      try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16);
-        const pad = (num: number) => String(num).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      } catch {
-        return new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16);
-      }
-    };
     setNewTask({
       titulo: task.titulo || '',
       descripcion: task.descripcion || '',
@@ -355,7 +454,6 @@ export const EventsPage: React.FC = () => {
   const getEstadoBadge = (estado: string) => {
     const config: Record<string, { label: string; className: string }> = {
       PROGRAMADO: { label: '📅 Programado', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-      EN_PROCESO: { label: '⏳ En proceso', className: 'bg-amber-50 text-amber-700 border-amber-200' },
       COMPLETADO: { label: '✅ Completado', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
       CANCELADO: { label: '🚫 Cancelado', className: 'bg-rose-50 text-rose-700 border-rose-200' },
     };
@@ -453,7 +551,7 @@ export const EventsPage: React.FC = () => {
               <select
                 value={tipoFilter}
                 onChange={(e) => setTipoFilter(e.target.value)}
-                className="flex-1 sm:flex-none sm:w-auto sm:min-w-[170px] px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition truncate"
+                className="flex-1 sm:flex-none sm:w-auto sm:min-w-[160px] px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition truncate"
               >
                 <option value="">Todas las actividades</option>
                 {EVENT_TYPES.map((t) => (
@@ -461,19 +559,35 @@ export const EventsPage: React.FC = () => {
                 ))}
               </select>
 
+              <select
+                value={estadoFilter}
+                onChange={(e) => setEstadoFilter(e.target.value)}
+                className="flex-1 sm:flex-none sm:w-auto sm:min-w-[145px] px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition truncate"
+              >
+                <option value="">Todos los estados</option>
+                <option value="PROGRAMADO">📅 Programado</option>
+                <option value="COMPLETADO">✅ Completado</option>
+                <option value="CANCELADO">🚫 Cancelado</option>
+              </select>
+
               <div className="flex-1 sm:flex-none flex items-center gap-2">
                 <input
                   type="date"
                   value={fechaFilter}
                   onChange={(e) => setFechaFilter(e.target.value)}
-                  className="w-full sm:w-auto sm:min-w-[150px] max-w-full box-border px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
+                  className="w-full sm:w-auto sm:min-w-[140px] max-w-full box-border px-3 sm:px-3.5 py-2.5 bg-white border border-line-strong rounded-xl text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
                 />
-                {fechaFilter && (
+                {(fechaFilter || estadoFilter || tipoFilter || searchTermEvents) && (
                   <button
                     type="button"
-                    onClick={() => setFechaFilter('')}
+                    onClick={() => {
+                      setFechaFilter('');
+                      setEstadoFilter('');
+                      setTipoFilter('');
+                      setSearchTermEvents('');
+                    }}
                     className="text-xs text-rose-600 hover:underline font-medium shrink-0"
-                    title="Limpiar filtro de fecha"
+                    title="Limpiar todos los filtros"
                   >
                     Limpiar
                   </button>
@@ -506,8 +620,6 @@ export const EventsPage: React.FC = () => {
                             className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none transition shrink-0 ${
                               evt.estado === 'COMPLETADO'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : evt.estado === 'EN_PROCESO'
-                                ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
                                 : evt.estado === 'CANCELADO'
                                 ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
                                 : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
@@ -515,7 +627,6 @@ export const EventsPage: React.FC = () => {
                             title="Cambiar estado del evento rápidamente"
                           >
                             <option value="PROGRAMADO">📅 Programado</option>
-                            <option value="EN_PROCESO">⏳ En proceso</option>
                             <option value="COMPLETADO">✅ Completado</option>
                             <option value="CANCELADO">🚫 Cancelado</option>
                           </select>
@@ -553,11 +664,24 @@ export const EventsPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="space-y-1.5 text-xs text-gray-500 pt-2 border-t border-line mt-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-navy shrink-0" />
-                      <span className="truncate font-semibold text-gray-700">{new Date(evt.fechaInicio).toLocaleString('es-CO')}</span>
-                    </div>
+                  <div className="space-y-2 text-xs text-gray-500 pt-2 border-t border-line mt-3">
+                    {(() => {
+                      const timeDisplay = formatEventDisplay(evt.fechaInicio, evt.fechaFin);
+                      return (
+                        <div className="space-y-1 text-xs text-gray-600 bg-surface-subtle p-2.5 rounded-xl border border-line">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-3.5 h-3.5 text-navy shrink-0" />
+                            <span className="font-bold text-gray-800">{timeDisplay.fecha}</span>
+                          </div>
+                          {timeDisplay.horario && (
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-3.5 h-3.5 text-navy shrink-0" />
+                              <span className="font-semibold text-navy">{timeDisplay.horario}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-navy shrink-0" />
                       <span className="truncate">{evt.direccion || 'Lugar por definir'}</span>
@@ -737,7 +861,6 @@ export const EventsPage: React.FC = () => {
                     className="w-full max-w-full min-w-0 box-border bg-white border border-line-strong rounded-xl px-3 py-2.5 text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition"
                   >
                     <option value="PROGRAMADO">📅 Programado</option>
-                    <option value="EN_PROCESO">⏳ En proceso</option>
                     <option value="COMPLETADO">✅ Completado</option>
                     <option value="CANCELADO">🚫 Cancelado</option>
                   </select>

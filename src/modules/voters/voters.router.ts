@@ -88,12 +88,8 @@ votersRouter.get('/', async (req: AuthenticatedRequest, res) => {
       v.puestoVotacionId === user.puestoAsignadoId && 
       (!user.mesaAsignada || v.mesa === user.mesaAsignada)
     );
-  } else if (user.role === 'COORDINADOR') {
-    // Coordinador ve los votantes de su municipio asignado o creados por sus líderes subordinados
-    if (user.municipioAsignado) {
-      list = list.filter(v => v.municipio === user.municipioAsignado);
-    }
   }
+  // SUPER_ADMIN, ADMIN_CAMPANA y COORDINADOR tienen visibilidad completa de todos los votantes registrados
 
   // 2. Filtros de búsqueda (Query Params)
   const { search, nivelFidelizacion, estadoSeguimiento, requiereTransporte, municipio, puestoId, mesa } = req.query;
